@@ -39,13 +39,11 @@
 
 // ROS messages
 #include <can_msgs/Frame.h>
-#include <dataspeed_can_msg_filters/ApproximateTime.h>
 #include <dbw_fca_msgs/BrakeCmd.h>
 #include <dbw_fca_msgs/BrakeReport.h>
 #include <dbw_fca_msgs/ThrottleCmd.h>
 #include <dbw_fca_msgs/ThrottleReport.h>
 #include <dbw_fca_msgs/SteeringCmd.h>
-#include <dbw_fca_msgs/SteeringDebug.h>
 #include <dbw_fca_msgs/SteeringReport.h>
 #include <dbw_fca_msgs/GearCmd.h>
 #include <dbw_fca_msgs/GearReport.h>
@@ -55,18 +53,14 @@
 #include <dbw_fca_msgs/WheelSpeedReport.h>
 #include <dbw_fca_msgs/BrakeInfoReport.h>
 #include <dbw_fca_msgs/ThrottleInfoReport.h>
-#include <sensor_msgs/Imu.h>
-#include <sensor_msgs/NavSatFix.h>
-#include <sensor_msgs/TimeReference.h>
 #include <sensor_msgs/JointState.h>
-#include <sensor_msgs/PointCloud2.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <std_msgs/Empty.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/String.h>
 
-// Module Version class
-#include <dbw_fca_can/ModuleVersion.h>
+// Platform and module version map
+#include <dbw_fca_can/PlatformMap.h>
 
 namespace dbw_fca_can
 {
@@ -117,9 +111,9 @@ private:
   void enableSystem();
   void disableSystem();
   void buttonCancel();
-  void overrideBrake(bool override);
-  void overrideThrottle(bool override);
-  void overrideSteering(bool override);
+  void overrideBrake(bool override, bool timeout);
+  void overrideThrottle(bool override, bool timeout);
+  void overrideSteering(bool override, bool timeout);
   void overrideGear(bool override);
   void timeoutBrake(bool timeout, bool enabled);
   void timeoutThrottle(bool timeout, bool enabled);
@@ -143,15 +137,23 @@ private:
   sensor_msgs::JointState joint_state_;
   void publishJointStates(const ros::Time &stamp, const dbw_fca_msgs::SteeringReport *steering);
 
+  // The signum function: https://stackoverflow.com/questions/1903954/
+  template <typename T> static int sgn(T val) {
+      return ((T)0 < val) - (val < (T)0);
+  }
+
+  // Sign of the wheel velocities, to be multiplied with vehicle speed
+  float speedSign() const {
+    return sgn(joint_state_.velocity[JOINT_FL]) + sgn(joint_state_.velocity[JOINT_FR]) +
+           sgn(joint_state_.velocity[JOINT_RL]) + sgn(joint_state_.velocity[JOINT_RR]) < 0 ? -1.0 : 1.0;
+  }
+
   // Licensing
   std::string vin_;
   std::string date_;
 
   // Firmware Versions
-  ModuleVersion version_brake_;
-  ModuleVersion version_throttle_;
-  ModuleVersion version_steering_;
-  ModuleVersion version_shifting_;
+  PlatformMap firmware_;
 
   // Frame ID
   std::string frame_id_;
@@ -186,7 +188,6 @@ private:
   ros::Publisher pub_brake_;
   ros::Publisher pub_throttle_;
   ros::Publisher pub_steering_;
-  ros::Publisher pub_steer_debug_;
   ros::Publisher pub_gear_;
   ros::Publisher pub_misc_1_;
   ros::Publisher pub_wheel_speeds_;
