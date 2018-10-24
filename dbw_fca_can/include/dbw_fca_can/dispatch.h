@@ -110,7 +110,7 @@ typedef struct {
   uint8_t :1;
   uint8_t QUIET :1;
   uint8_t :2;
-  uint8_t TMODE :1; // Torque mode
+  uint8_t CMD_TYPE :1;
   uint8_t SVEL;
   uint8_t :8;
   uint8_t :8;
@@ -121,7 +121,7 @@ typedef struct {
 typedef struct {
   int16_t ANGLE;
   int16_t CMD :15;
-  uint8_t CMD_TYPE :1;
+  uint8_t TMODE :1; // Torque mode
   uint16_t SPEED;
   int8_t TORQUE;
   uint8_t ENABLED :1;
@@ -158,18 +158,18 @@ typedef struct {
   uint8_t turn_signal :2;
   uint8_t :6;
   uint8_t :3;
-  uint8_t btn_cc_on :1;
-  uint8_t btn_cc_off :1;
-  uint8_t btn_cc_res:1;
-  uint8_t btn_cc_cncl:1;
+  uint8_t :1;
+  uint8_t :1;
+  uint8_t btn_cc_res :1;
+  uint8_t btn_cc_cncl :1;
   uint8_t :1;
   uint8_t btn_cc_on_off :1;
-  uint8_t btn_cc_res_cncl:1;
+  uint8_t :1;
   uint8_t btn_cc_set_inc :1;
   uint8_t btn_cc_set_dec :1;
   uint8_t btn_cc_gap_inc :1;
   uint8_t btn_cc_gap_dec :1;
-  uint8_t btn_la_on_off :1;
+  uint8_t :1;
   uint8_t FLTBUS :1;
   uint8_t :8;
   uint8_t :2;
@@ -179,6 +179,8 @@ typedef struct {
   uint8_t btn_ld_left :1;
   uint8_t btn_ld_right :1;
   uint8_t :1;
+  uint8_t btn_cc_mode :1;
+  uint8_t :7;
 } MsgMiscReport;
 
 typedef struct {
@@ -215,23 +217,6 @@ typedef struct {
   uint8_t :8;
   uint8_t :8;
 } MsgReportThrottleInfo;
-
-typedef struct {
-  int16_t ANGLE;
-  int16_t RATE :15;
-  int16_t FAULT :1;
-  int16_t TORQUE :12;
-  int16_t :4;
-  uint8_t :8;
-  uint8_t ENABLED :1;
-  uint8_t OVERRIDE :1;
-  uint8_t FLTPWR :1;
-  uint8_t FLTWDC :1;
-  uint8_t FLTBUS1 :1;
-  uint8_t FLTBUS2 :1;
-  uint8_t FLTCAL :1;
-  uint8_t TMOUT :1;
-} MsgSteeringDebug;
 
 typedef enum {
   LIC_MUX_F0 = 0x00, // Feature 0 (Main)
@@ -308,15 +293,9 @@ typedef struct {
   };
 } MsgLicense;
 
-enum {
-  VERSION_BPEC  = 1, // Brake
-  VERSION_TPEC  = 2, // Throttle
-  VERSION_EPAS  = 3, // Steering
-  VERSION_SHIFT = 4, // Shifting
-};
 typedef struct {
   uint8_t module;
-  uint8_t :8;
+  uint8_t platform;
   uint16_t major;
   uint16_t minor;
   uint16_t build;
@@ -333,12 +312,11 @@ static void dispatchAssertSizes() {
   BUILD_ASSERT(1 == sizeof(MsgGearCmd));
   BUILD_ASSERT(2 == sizeof(MsgGearReport));
   BUILD_ASSERT(1 == sizeof(MsgTurnSignalCmd));
-  BUILD_ASSERT(5 == sizeof(MsgMiscReport));
+  BUILD_ASSERT(6 == sizeof(MsgMiscReport));
   BUILD_ASSERT(8 == sizeof(MsgReportWheelSpeed));
   BUILD_ASSERT(8 == sizeof(MsgReportWheelPosition));
   BUILD_ASSERT(8 == sizeof(MsgReportBrakeInfo));
   BUILD_ASSERT(8 == sizeof(MsgReportThrottleInfo));
-  BUILD_ASSERT(8 == sizeof(MsgSteeringDebug));
   BUILD_ASSERT(8 == sizeof(MsgLicense));
   BUILD_ASSERT(8 == sizeof(MsgVersion));
 }
@@ -359,7 +337,6 @@ enum {
   ID_REPORT_WHEEL_POSITION  = 0x070,
   ID_REPORT_BRAKE_INFO      = 0x074,
   ID_REPORT_THROTTLE_INFO   = 0x075,
-  ID_STEERING_DEBUG         = 0x07D,
   ID_LICENSE                = 0x07E,
   ID_VERSION                = 0x07F,
 };

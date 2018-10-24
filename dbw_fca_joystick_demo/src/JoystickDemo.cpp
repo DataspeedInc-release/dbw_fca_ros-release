@@ -39,14 +39,27 @@ JoystickDemo::JoystickDemo(ros::NodeHandle &node, ros::NodeHandle &priv_nh) : co
   joy_.axes.resize(AXIS_COUNT_X, 0);
   joy_.buttons.resize(BTN_COUNT_X, 0);
 
+  brake_ = true;
+  throttle_ = true;
+  steer_ = true;
+  shift_ = true;
+  signal_ = true;
+  priv_nh.getParam("brake", brake_);
+  priv_nh.getParam("throttle", throttle_);
+  priv_nh.getParam("steer", steer_);
+  priv_nh.getParam("shift", shift_);
+  priv_nh.getParam("signal", signal_);
+
   ignore_ = false;
   enable_ = true;
   count_ = false;
+  strq_ = false;
   svel_ = 0.0;
   last_steering_filt_output_ = 0.0;
   priv_nh.getParam("ignore", ignore_);
   priv_nh.getParam("enable", enable_);
   priv_nh.getParam("count", count_);
+  priv_nh.getParam("strq", strq_);
   priv_nh.getParam("svel", svel_);
 
   sub_joy_ = node.subscribe("/joy", 1, &JoystickDemo::recvJoy, this);
@@ -60,11 +73,21 @@ JoystickDemo::JoystickDemo(ros::NodeHandle &node, ros::NodeHandle &priv_nh) : co
   data_.joy_throttle_valid = false;
   data_.joy_brake_valid = false;
 
-  pub_throttle_ = node.advertise<dbw_fca_msgs::ThrottleCmd>("throttle_cmd", 1);
-  pub_brake_ = node.advertise<dbw_fca_msgs::BrakeCmd>("brake_cmd", 1);
-  pub_turn_signal_ = node.advertise<dbw_fca_msgs::TurnSignalCmd>("turn_signal_cmd", 1);
-  pub_steering_ = node.advertise<dbw_fca_msgs::SteeringCmd>("steering_cmd", 1);
-  pub_gear_ = node.advertise<dbw_fca_msgs::GearCmd>("gear_cmd", 1);
+  if (brake_) {
+    pub_brake_ = node.advertise<dbw_fca_msgs::BrakeCmd>("brake_cmd", 1);
+  }
+  if (throttle_) {
+    pub_throttle_ = node.advertise<dbw_fca_msgs::ThrottleCmd>("throttle_cmd", 1);
+  }
+  if (steer_) {
+    pub_steering_ = node.advertise<dbw_fca_msgs::SteeringCmd>("steering_cmd", 1);
+  }
+  if (shift_) {
+    pub_gear_ = node.advertise<dbw_fca_msgs::GearCmd>("gear_cmd", 1);
+  }
+  if (signal_) {
+    pub_turn_signal_ = node.advertise<dbw_fca_msgs::TurnSignalCmd>("turn_signal_cmd", 1);
+  }
   if (enable_) {
     pub_enable_ = node.advertise<std_msgs::Empty>("enable", 1);
     pub_disable_ = node.advertise<std_msgs::Empty>("disable", 1);
@@ -88,62 +111,72 @@ void JoystickDemo::cmdCallback(const ros::TimerEvent& event)
     counter_++;
   }
 
-  // Throttle
-  dbw_fca_msgs::ThrottleCmd throttle_msg;
-  throttle_msg.enable = true;
-  throttle_msg.ignore = ignore_;
-  throttle_msg.count = counter_;
-  throttle_msg.pedal_cmd_type = dbw_fca_msgs::ThrottleCmd::CMD_PERCENT;
-  throttle_msg.pedal_cmd = data_.throttle_joy;
-  pub_throttle_.publish(throttle_msg);
-
   // Brake
-  dbw_fca_msgs::BrakeCmd brake_msg;
-  brake_msg.enable = true;
-  brake_msg.ignore = ignore_;
-  brake_msg.count = counter_;
-  brake_msg.pedal_cmd_type = dbw_fca_msgs::BrakeCmd::CMD_PERCENT;
-  brake_msg.pedal_cmd = data_.brake_joy;
-  pub_brake_.publish(brake_msg);
+  if (brake_) {
+    dbw_fca_msgs::BrakeCmd msg;
+    msg.enable = true;
+    msg.ignore = ignore_;
+    msg.count = counter_;
+    msg.pedal_cmd_type = dbw_fca_msgs::BrakeCmd::CMD_PERCENT;
+    msg.pedal_cmd = data_.brake_joy;
+    pub_brake_.publish(msg);
+  }
+
+  // Throttle
+  if (throttle_) {
+    dbw_fca_msgs::ThrottleCmd msg;
+    msg.enable = true;
+    msg.ignore = ignore_;
+    msg.count = counter_;
+    msg.pedal_cmd_type = dbw_fca_msgs::ThrottleCmd::CMD_PERCENT;
+    msg.pedal_cmd = data_.throttle_joy;
+    pub_throttle_.publish(msg);
+  }
 
   // Steering
-  dbw_fca_msgs::SteeringCmd steering_msg;
-  steering_msg.enable = true;
-  steering_msg.ignore = ignore_;
-  steering_msg.count = counter_;
-  if (1) {
-    steering_msg.cmd_type = dbw_fca_msgs::SteeringCmd::CMD_ANGLE;
+  if (steer_) {
+    dbw_fca_msgs::SteeringCmd msg;
+    msg.enable = true;
+    msg.ignore = ignore_;
+    msg.count = counter_;
+    if (!strq_) {
+      msg.cmd_type = dbw_fca_msgs::SteeringCmd::CMD_ANGLE;
 
-    float raw_steering_cmd;
-    if (data_.steering_mult) {
-      raw_steering_cmd = dbw_fca_msgs::SteeringCmd::ANGLE_MAX * data_.steering_joy;
+      float raw_steering_cmd;
+      if (data_.steering_mult) {
+        raw_steering_cmd = dbw_fca_msgs::SteeringCmd::ANGLE_MAX * data_.steering_joy;
+      } else {
+        raw_steering_cmd = 0.5 * dbw_fca_msgs::SteeringCmd::ANGLE_MAX * data_.steering_joy;
+      }
+
+      float tau = 0.1;
+      float filtered_steering_cmd = 0.02 / tau * raw_steering_cmd + (1 - 0.02 / tau) * last_steering_filt_output_;
+      last_steering_filt_output_ = filtered_steering_cmd;
+
+      msg.steering_wheel_angle_velocity = svel_;
+      msg.steering_wheel_angle_cmd = filtered_steering_cmd;
     } else {
-      raw_steering_cmd = 0.5 * dbw_fca_msgs::SteeringCmd::ANGLE_MAX * data_.steering_joy;
+      msg.cmd_type = dbw_fca_msgs::SteeringCmd::CMD_TORQUE;
+      msg.steering_wheel_torque_cmd = dbw_fca_msgs::SteeringCmd::TORQUE_MAX * data_.steering_joy;
     }
-
-    float tau = 0.1;
-    float filtered_steering_cmd = 0.02 / tau * raw_steering_cmd + (1 - 0.02 / tau) * last_steering_filt_output_;
-    last_steering_filt_output_ = filtered_steering_cmd;
-
-    steering_msg.steering_wheel_angle_velocity = svel_;
-    steering_msg.steering_wheel_angle_cmd = filtered_steering_cmd;
-  } else {
-    steering_msg.cmd_type = dbw_fca_msgs::SteeringCmd::CMD_TORQUE;
-    steering_msg.steering_wheel_torque_cmd = dbw_fca_msgs::SteeringCmd::TORQUE_MAX * data_.steering_joy;
+    pub_steering_.publish(msg);
   }
-  pub_steering_.publish(steering_msg);
 
   // Gear
-  if (data_.gear_cmd != dbw_fca_msgs::Gear::NONE) {
-    dbw_fca_msgs::GearCmd gear_msg;
-    gear_msg.cmd.gear = data_.gear_cmd;
-    pub_gear_.publish(gear_msg);
+  if (shift_) {
+    if (data_.gear_cmd != dbw_fca_msgs::Gear::NONE) {
+      dbw_fca_msgs::GearCmd msg;
+      msg.cmd.gear = data_.gear_cmd;
+      pub_gear_.publish(msg);
+    }
   }
 
   // Turn signal
-  dbw_fca_msgs::TurnSignalCmd turn_signal_msg;
-  turn_signal_msg.cmd.value = data_.turn_signal_cmd;
-  pub_turn_signal_.publish(turn_signal_msg);
+  if (signal_) {
+    dbw_fca_msgs::TurnSignalCmd msg;
+    msg.cmd.value = data_.turn_signal_cmd;
+    pub_turn_signal_.publish(msg);
+  }
 }
 
 void JoystickDemo::recvJoy(const sensor_msgs::Joy::ConstPtr& msg)
