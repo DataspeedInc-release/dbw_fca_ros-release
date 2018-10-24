@@ -1,0 +1,13 @@
+Source: ros-kinetic-dbw-fca
+Section: misc
+Priority: extra
+Maintainer: Kevin Hallenbeck <khallenbeck@dataspeedinc.com>
+Build-Depends: debhelper (>= 9.0.0), ros-kinetic-catkin
+Homepage: http://dataspeedinc.com
+Standards-Version: 3.9.2
+
+Package: ros-kinetic-dbw-fca
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-kinetic-dbw-fca-can, ros-kinetic-dbw-fca-description, ros-kinetic-dbw-fca-joystick-demo, ros-kinetic-dbw-fca-msgs
+Description: Drive-by-wire interface to the Dataspeed Inc.
+ Chrysler Pacifica DBW kit
