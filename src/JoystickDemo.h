@@ -66,8 +66,8 @@ private:
 
   // Topics
   ros::Subscriber sub_joy_;
-  ros::Publisher pub_throttle_;
   ros::Publisher pub_brake_;
+  ros::Publisher pub_throttle_;
   ros::Publisher pub_steering_;
   ros::Publisher pub_gear_;
   ros::Publisher pub_turn_signal_;
@@ -75,9 +75,17 @@ private:
   ros::Publisher pub_disable_;
 
   // Parameters
+  bool brake_; // Send brake commands
+  bool throttle_; // Send throttle commands
+  bool steer_; // Send steering commands
+  bool shift_; // Send shift commands
+  bool signal_; // Send turn signal commands
+
+  // Parameters
   bool ignore_; // Ignore driver overrides
   bool enable_; // Use enable and disable buttons
   bool count_; // Increment counter to enable watchdog
+  bool strq_; // Steering torque command (otherwise angle)
   double svel_; // Steering command speed
 
   // Variables
