@@ -17,7 +17,6 @@ add_message_files(DIRECTORY msg FILES
   GearReport.msg
   Misc1Report.msg
   SteeringCmd.msg
-  SteeringDebug.msg
   SteeringReport.msg
   ThrottleCmd.msg
   ThrottleInfoReport.msg
