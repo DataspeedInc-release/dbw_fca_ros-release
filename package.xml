@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>dbw_fca_can</name>
-  <version>0.0.1</version>
+  <version>0.0.2</version>
   <description>
     Drive-by-wire interface to the Dataspeed Inc. Chrysler Pacifica DBW kit
   </description>
@@ -23,8 +23,6 @@
   <depend>sensor_msgs</depend>
   <depend>can_msgs</depend>
   <depend>dbw_fca_msgs</depend>
-
-  <build_depend>dataspeed_can_msg_filters</build_depend>
 
   <exec_depend>roslaunch</exec_depend>
   <exec_depend>dataspeed_can_usb</exec_depend>
