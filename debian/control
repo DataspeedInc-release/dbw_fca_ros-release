@@ -1,0 +1,12 @@
+Source: ros-kinetic-dbw-fca-joystick-demo
+Section: misc
+Priority: extra
+Maintainer: Kevin Hallenbeck <khallenbeck@dataspeedinc.com>
+Build-Depends: debhelper (>= 9.0.0), ros-kinetic-catkin, ros-kinetic-dbw-fca-msgs, ros-kinetic-roscpp, ros-kinetic-roslaunch, ros-kinetic-roslib, ros-kinetic-sensor-msgs, ros-kinetic-std-msgs
+Homepage: http://dataspeedinc.com
+Standards-Version: 3.9.2
+
+Package: ros-kinetic-dbw-fca-joystick-demo
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-kinetic-dbw-fca-can, ros-kinetic-dbw-fca-msgs, ros-kinetic-joy, ros-kinetic-roscpp, ros-kinetic-roslaunch, ros-kinetic-sensor-msgs, ros-kinetic-std-msgs
+Description: Demonstration of drive-by-wire with joystick
