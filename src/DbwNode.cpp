@@ -40,10 +40,16 @@ namespace dbw_fca_can
 {
 
 // Latest firmware versions
-static const ModuleVersion FIRMWARE_BRAKE(0,1,3);
-static const ModuleVersion FIRMWARE_THROTTLE(0,1,3);
-static const ModuleVersion FIRMWARE_STEERING(0,1,3);
-static const ModuleVersion FIRMWARE_SHIFTING(0,1,3);
+PlatformMap FIRMWARE_LATEST({
+  {PlatformVersion(P_FCA_RU,  M_BPEC,  ModuleVersion(0,1,4))},
+  {PlatformVersion(P_FCA_RU,  M_TPEC,  ModuleVersion(0,1,4))},
+  {PlatformVersion(P_FCA_RU,  M_STEER, ModuleVersion(0,1,4))},
+  {PlatformVersion(P_FCA_RU,  M_SHIFT, ModuleVersion(0,1,4))},
+  {PlatformVersion(P_FCA_WK2, M_TPEC,  ModuleVersion(0,0,2))},
+  {PlatformVersion(P_FCA_WK2, M_STEER, ModuleVersion(0,0,2))},
+  {PlatformVersion(P_FCA_WK2, M_SHIFT, ModuleVersion(0,0,2))},
+  {PlatformVersion(P_FCA_WK2, M_ABS,   ModuleVersion(0,0,2))},
+});
 
 DbwNode::DbwNode(ros::NodeHandle &node, ros::NodeHandle &priv_nh)
 {
@@ -82,7 +88,7 @@ DbwNode::DbwNode(ros::NodeHandle &node, ros::NodeHandle &priv_nh)
   priv_nh.getParam("buttons", buttons_);
 
   // Pedal LUTs (local/embedded)
-  pedal_luts_ = true;
+  pedal_luts_ = false;
   priv_nh.getParam("pedal_luts", pedal_luts_);
 
   // Ackermann steering parameters
@@ -111,7 +117,6 @@ DbwNode::DbwNode(ros::NodeHandle &node, ros::NodeHandle &priv_nh)
   pub_brake_ = node.advertise<dbw_fca_msgs::BrakeReport>("brake_report", 2);
   pub_throttle_ = node.advertise<dbw_fca_msgs::ThrottleReport>("throttle_report", 2);
   pub_steering_ = node.advertise<dbw_fca_msgs::SteeringReport>("steering_report", 2);
-  pub_steer_debug_ = node.advertise<dbw_fca_msgs::SteeringDebug>("steering_debug", 2);
   pub_gear_ = node.advertise<dbw_fca_msgs::GearReport>("gear_report", 2);
   pub_misc_1_ = node.advertise<dbw_fca_msgs::Misc1Report>("misc_1_report", 2);
   pub_wheel_speeds_ = node.advertise<dbw_fca_msgs::WheelSpeedReport>("wheel_speed_report", 2);
@@ -159,9 +164,10 @@ void DbwNode::recvCAN(const can_msgs::Frame::ConstPtr& msg)
       case ID_BRAKE_REPORT:
         if (msg->dlc >= sizeof(MsgBrakeReport)) {
           const MsgBrakeReport *ptr = (const MsgBrakeReport*)msg->data.elems;
-          faultBrakes(ptr->FLT1 && ptr->FLT2);
+          faultBrakes(ptr->FLT1 || ptr->FLT2);
           faultWatchdog(ptr->FLTWDC, ptr->WDCSRC, ptr->WDCBRK);
-          overrideBrake(ptr->OVERRIDE);
+          overrideBrake(ptr->OVERRIDE, ptr->TMOUT);
+          timeoutBrake(ptr->TMOUT, ptr->ENABLED);
           dbw_fca_msgs::BrakeReport out;
           out.header.stamp = msg->header.stamp;
           out.pedal_input  = (float)ptr->PI / UINT16_MAX;
@@ -180,7 +186,6 @@ void DbwNode::recvCAN(const can_msgs::Frame::ConstPtr& msg)
           out.fault_ch2 = ptr->FLT2 ? true : false;
           out.fault_power = ptr->FLTPWR ? true : false;
           out.timeout = ptr->TMOUT ? true : false;
-          timeoutBrake(ptr->TMOUT, ptr->ENABLED);
           pub_brake_.publish(out);
           if (ptr->FLT1 || ptr->FLT2 || ptr->FLTPWR) {
             ROS_WARN_THROTTLE(5.0, "Brake fault.    FLT1: %s FLT2: %s FLTPWR: %s",
@@ -194,9 +199,10 @@ void DbwNode::recvCAN(const can_msgs::Frame::ConstPtr& msg)
       case ID_THROTTLE_REPORT:
         if (msg->dlc >= sizeof(MsgThrottleReport)) {
           const MsgThrottleReport *ptr = (const MsgThrottleReport*)msg->data.elems;
-          faultThrottle(ptr->FLT1 && ptr->FLT2);
+          faultThrottle(ptr->FLT1 || ptr->FLT2);
           faultWatchdog(ptr->FLTWDC, ptr->WDCSRC);
-          overrideThrottle(ptr->OVERRIDE);
+          overrideThrottle(ptr->OVERRIDE, ptr->TMOUT);
+          timeoutThrottle(ptr->TMOUT, ptr->ENABLED);
           dbw_fca_msgs::ThrottleReport out;
           out.header.stamp = msg->header.stamp;
           out.pedal_input  = (float)ptr->PI / UINT16_MAX;
@@ -211,7 +217,6 @@ void DbwNode::recvCAN(const can_msgs::Frame::ConstPtr& msg)
           out.fault_ch2 = ptr->FLT2 ? true : false;
           out.fault_power = ptr->FLTPWR ? true : false;
           out.timeout = ptr->TMOUT ? true : false;
-          timeoutThrottle(ptr->TMOUT, ptr->ENABLED);
           pub_throttle_.publish(out);
           if (ptr->FLT1 || ptr->FLT2 || ptr->FLTPWR) {
             ROS_WARN_THROTTLE(5.0, "Throttle fault. FLT1: %s FLT2: %s FLTPWR: %s",
@@ -225,21 +230,22 @@ void DbwNode::recvCAN(const can_msgs::Frame::ConstPtr& msg)
       case ID_STEERING_REPORT:
         if (msg->dlc >= sizeof(MsgSteeringReport)) {
           const MsgSteeringReport *ptr = (const MsgSteeringReport*)msg->data.elems;
-          faultSteering(ptr->FLTBUS1 && ptr->FLTBUS2);
+          faultSteering(ptr->FLTBUS1 || ptr->FLTBUS2);
           faultSteeringCal(ptr->FLTCAL);
           faultWatchdog(ptr->FLTWDC);
-          overrideSteering(ptr->OVERRIDE);
+          overrideSteering(ptr->OVERRIDE, ptr->TMOUT);
+          timeoutSteering(ptr->TMOUT, ptr->ENABLED);
           dbw_fca_msgs::SteeringReport out;
           out.header.stamp = msg->header.stamp;
           out.steering_wheel_angle = (float)ptr->ANGLE * (float)(0.1 * M_PI / 180);
-          out.steering_wheel_cmd_type = ptr->CMD_TYPE;
+          out.steering_wheel_cmd_type = ptr->TMODE ? dbw_fca_msgs::SteeringReport::CMD_TORQUE : dbw_fca_msgs::SteeringReport::CMD_ANGLE;
           if (out.steering_wheel_cmd_type == dbw_fca_msgs::SteeringReport::CMD_ANGLE) {
             out.steering_wheel_cmd = (float)ptr->CMD   * (float)(0.1 * M_PI / 180);
           } else {
             out.steering_wheel_cmd = (float)ptr->CMD / 128.0f;
           }
           out.steering_wheel_torque = (float)ptr->TORQUE * (float)0.0625;
-          out.speed = (float)ptr->SPEED * (float)(0.01 / 3.6);
+          out.speed = (float)ptr->SPEED * (float)(0.01 / 3.6) * (float)speedSign();
           out.enabled = ptr->ENABLED ? true : false;
           out.override = ptr->OVERRIDE ? true : false;
           out.fault_wdc = ptr->FLTWDC ? true : false;
@@ -248,7 +254,6 @@ void DbwNode::recvCAN(const can_msgs::Frame::ConstPtr& msg)
           out.fault_calibration = ptr->FLTCAL ? true : false;
           out.fault_power = ptr->FLTPWR ? true : false;
           out.timeout = ptr->TMOUT ? true : false;
-          timeoutSteering(ptr->TMOUT, ptr->ENABLED);
           pub_steering_.publish(out);
           geometry_msgs::TwistStamped twist;
           twist.header.stamp = out.header.stamp;
@@ -311,7 +316,7 @@ void DbwNode::recvCAN(const can_msgs::Frame::ConstPtr& msg)
         if (msg->dlc >= sizeof(MsgMiscReport)) {
           const MsgMiscReport *ptr = (const MsgMiscReport*)msg->data.elems;
           if (buttons_) {
-            if (ptr->btn_cc_gap_inc || ptr->btn_cc_cncl) {
+            if (0) {
               buttonCancel();
             } else if ((ptr->btn_ld_left && ptr->btn_ld_down)) {
               enableSystem();
@@ -320,17 +325,14 @@ void DbwNode::recvCAN(const can_msgs::Frame::ConstPtr& msg)
           dbw_fca_msgs::Misc1Report out;
           out.header.stamp = msg->header.stamp;
           out.turn_signal.value = ptr->turn_signal;
-          out.btn_cc_on = ptr->btn_cc_on ? true : false;
-          out.btn_cc_off = ptr->btn_cc_off ? true : false;
           out.btn_cc_on_off = ptr->btn_cc_on_off ? true : false;
           out.btn_cc_res = ptr->btn_cc_res ? true : false;
           out.btn_cc_cncl = ptr->btn_cc_cncl ? true : false;
-          out.btn_cc_res_cncl = ptr->btn_cc_res_cncl ? true : false;
           out.btn_cc_set_inc = ptr->btn_cc_set_inc ? true : false;
           out.btn_cc_set_dec = ptr->btn_cc_set_dec ? true : false;
           out.btn_cc_gap_inc = ptr->btn_cc_gap_inc ? true : false;
           out.btn_cc_gap_dec = ptr->btn_cc_gap_dec ? true : false;
-          out.btn_la_on_off = ptr->btn_la_on_off ? true : false;
+          out.btn_cc_mode = ptr->btn_cc_mode ? true : false;
           out.btn_ld_ok = ptr->btn_ld_ok ? true : false;
           out.btn_ld_up = ptr->btn_ld_up ? true : false;
           out.btn_ld_down = ptr->btn_ld_down ? true : false;
@@ -346,7 +348,6 @@ void DbwNode::recvCAN(const can_msgs::Frame::ConstPtr& msg)
           const MsgReportWheelSpeed *ptr = (const MsgReportWheelSpeed*)msg->data.elems;
           dbw_fca_msgs::WheelSpeedReport out;
           out.header.stamp = msg->header.stamp;
-          ///@TODO: Determine conversion factor
           out.front_left  = (float)ptr->front_left  * 0.01;
           out.front_right = (float)ptr->front_right * 0.01;
           out.rear_left   = (float)ptr->rear_left   * 0.01;
@@ -390,27 +391,6 @@ void DbwNode::recvCAN(const can_msgs::Frame::ConstPtr& msg)
           out.throttle_pc = (float)ptr->throttle_pc * 0.4;
           out.axle_torque = (float)ptr->axle_torque * 1.5625;
           pub_throttle_info_.publish(out);
-        }
-        break;
-
-      case ID_STEERING_DEBUG:
-        if (msg->dlc >= sizeof(MsgSteeringDebug)) {
-          const MsgSteeringDebug *ptr = (const MsgSteeringDebug*)msg->data.elems;
-          dbw_fca_msgs::SteeringDebug out;
-          out.header.stamp = msg->header.stamp;
-          out.steering_wheel_angle = (float)ptr->ANGLE * (0.1 * M_PI / 180);
-          out.steering_wheel_rate = (float)ptr->RATE * (0.5 * M_PI / 180);
-          out.steering_wheel_torque = (float)ptr->TORQUE * 0.0078125;
-          out.enabled = ptr->ENABLED ? true : false;
-          out.override = ptr->OVERRIDE ? true : false;
-          out.fault = ptr->FAULT ? true : false;
-          out.fault_wdc = ptr->FLTWDC ? true : false;
-          out.fault_bus1 = ptr->FLTBUS1 ? true : false;
-          out.fault_bus2 = ptr->FLTBUS2 ? true : false;
-          out.fault_calibration = ptr->FLTCAL ? true : false;
-          out.fault_power = ptr->FLTPWR ? true : false;
-          out.timeout = ptr->TMOUT ? true : false;
-          pub_steer_debug_.publish(out);
         }
         break;
 
@@ -497,44 +477,22 @@ void DbwNode::recvCAN(const can_msgs::Frame::ConstPtr& msg)
       case ID_VERSION:
         if (msg->dlc >= sizeof(MsgVersion)) {
           const MsgVersion *ptr = (const MsgVersion*)msg->data.elems;
-          const ModuleVersion version(ptr->major, ptr->minor, ptr->build);
-          if (ptr->module == VERSION_BPEC) {
-            ROS_INFO_ONCE("Detected  brake   firmware version %u.%u.%u", ptr->major, ptr->minor, ptr->build);
-            version_brake_ = version;
-            if (version_brake_ < FIRMWARE_BRAKE) {
-              ROS_WARN_ONCE("Detected old  brake   firmware version %u.%u.%u, updating to %u.%u.%u is suggested.",
-                            version_brake_.major(), version_brake_.minor(), version_brake_.build(),
-                            FIRMWARE_BRAKE.major(), FIRMWARE_BRAKE.minor(), FIRMWARE_BRAKE.build());
+          const PlatformVersion version((Platform)ptr->platform, (Module)ptr->module, ptr->major, ptr->minor, ptr->build);
+          const ModuleVersion latest = FIRMWARE_LATEST.findModule(version);
+          const char * str_p = platformToString(version.p);
+          const char * str_m = moduleToString(version.m);
+          if (firmware_.findModule(version) != version.v) {
+            firmware_.insert(version);
+            if (latest.valid()) {
+              ROS_INFO("Detected %s %s firmware version %u.%u.%u", str_p, str_m, ptr->major, ptr->minor, ptr->build);
+            } else {
+              ROS_WARN("Detected %s %s firmware version %u.%u.%u, which is unsupported. Platform: 0x%02X, Module: %u", str_p, str_m,
+                       ptr->major, ptr->minor, ptr->build, ptr->platform, ptr->module);
             }
-          } else if (ptr->module == VERSION_TPEC) {
-            ROS_INFO_ONCE("Detected throttle firmware version %u.%u.%u", ptr->major, ptr->minor, ptr->build);
-            version_throttle_ = version;
-            if (version_throttle_ < FIRMWARE_THROTTLE) {
-              ROS_WARN_ONCE("Detected old throttle firmware version %u.%u.%u, updating to %u.%u.%u is suggested.",
-                            version_throttle_.major(), version_throttle_.minor(), version_throttle_.build(),
-                            FIRMWARE_THROTTLE.major(), FIRMWARE_THROTTLE.minor(), FIRMWARE_THROTTLE.build());
-            }
-          } else if (ptr->module == VERSION_EPAS) {
-            ROS_INFO_ONCE("Detected steering firmware version %u.%u.%u", ptr->major, ptr->minor, ptr->build);
-            version_steering_ = version;
-            if (version_steering_ < FIRMWARE_STEERING) {
-              ROS_WARN_ONCE("Detected old steering firmware version %u.%u.%u, updating to %u.%u.%u is suggested.",
-                            version_steering_.major(), version_steering_.minor(), version_steering_.build(),
-                            FIRMWARE_STEERING.major(), FIRMWARE_STEERING.minor(), FIRMWARE_STEERING.build());
-            }
-          } else if (ptr->module == VERSION_SHIFT) {
-            ROS_INFO_ONCE("Detected shifting firmware version %u.%u.%u", ptr->major, ptr->minor, ptr->build);
-            version_shifting_ = version;
-            if (version_shifting_ < FIRMWARE_SHIFTING) {
-              ROS_WARN_ONCE("Detected old shifting firmware version %u.%u.%u, updating to %u.%u.%u is suggested.",
-                            version_shifting_.major(), version_shifting_.minor(), version_shifting_.build(),
-                            FIRMWARE_SHIFTING.major(), FIRMWARE_SHIFTING.minor(), FIRMWARE_SHIFTING.build());
-            }
-          } else {
-            static std::map<uint8_t,ModuleVersion> list;
-            if (list.find(ptr->module) == list.end()) {
-              list[ptr->module] = version;
-              ROS_WARN("Detected unknown firmware version %u.%u.%u for module %u", ptr->major, ptr->minor, ptr->build, ptr->module);
+            if (version < latest) {
+              ROS_WARN("Firmware %s %s has old  version %u.%u.%u, updating to %u.%u.%u is suggested.", str_p, str_m,
+                       version.v.major(), version.v.minor(), version.v.build(),
+                       latest.major(),  latest.minor(),  latest.build());
             }
           }
         }
@@ -580,7 +538,9 @@ void DbwNode::recvBrakeCmd(const dbw_fca_msgs::BrakeCmd::ConstPtr& msg)
   MsgBrakeCmd *ptr = (MsgBrakeCmd*)out.data.elems;
   memset(ptr, 0x00, sizeof(*ptr));
   if (enabled()) {
+    bool fwd_abs = firmware_.findModule(M_ABS).valid(); // Does the ABS braking module exist?
     bool fwd = !pedal_luts_; // Forward command type, or apply pedal LUTs locally
+    fwd |= fwd_abs; // The local pedal LUTs are for the BPEC module, the ABS module requires forwarding
     switch (msg->pedal_cmd_type) {
       default:
       case dbw_fca_msgs::BrakeCmd::CMD_NONE:
@@ -608,6 +568,7 @@ void DbwNode::recvBrakeCmd(const dbw_fca_msgs::BrakeCmd::ConstPtr& msg)
         }
         break;
       case dbw_fca_msgs::BrakeCmd::CMD_TORQUE_RQ:
+        // CMD_TORQUE_RQ must be forwarded, there is no local implementation
         ptr->CMD_TYPE = dbw_fca_msgs::BrakeCmd::CMD_TORQUE_RQ;
         ptr->PCMD = std::max((float)0.0, std::min((float)UINT16_MAX, msg->pedal_cmd));
         break;
@@ -686,10 +647,11 @@ void DbwNode::recvSteeringCmd(const dbw_fca_msgs::SteeringCmd::ConstPtr& msg)
         if (fabsf(msg->steering_wheel_angle_velocity) > 0) {
           ptr->SVEL = std::max((float)1, std::min((float)254, (float)roundf(fabsf(msg->steering_wheel_angle_velocity) * 180 / M_PI / 2)));
         }
+        ptr->CMD_TYPE = dbw_fca_msgs::SteeringCmd::CMD_ANGLE;
         break;
       case dbw_fca_msgs::SteeringCmd::CMD_TORQUE:
         ptr->SCMD = std::max((float)-INT16_MAX, std::min((float)INT16_MAX, (float)(msg->steering_wheel_torque_cmd * 128)));
-        ptr->TMODE = 1;
+        ptr->CMD_TYPE = dbw_fca_msgs::SteeringCmd::CMD_TORQUE;
         break;
     }
     if (msg->enable) {
@@ -842,10 +804,13 @@ void DbwNode::buttonCancel()
   }
 }
 
-void DbwNode::overrideBrake(bool override)
+void DbwNode::overrideBrake(bool override, bool timeout)
 {
   bool en = enabled();
-  if (override && en) {
+  if (en && timeout) {
+    override = false;
+  }
+  if (en && override) {
     enable_ = false;
   }
   override_brake_ = override;
@@ -858,10 +823,13 @@ void DbwNode::overrideBrake(bool override)
   }
 }
 
-void DbwNode::overrideThrottle(bool override)
+void DbwNode::overrideThrottle(bool override, bool timeout)
 {
   bool en = enabled();
-  if (override && en) {
+  if (en && timeout) {
+    override = false;
+  }
+  if (en && override) {
     enable_ = false;
   }
   override_throttle_ = override;
@@ -874,10 +842,13 @@ void DbwNode::overrideThrottle(bool override)
   }
 }
 
-void DbwNode::overrideSteering(bool override)
+void DbwNode::overrideSteering(bool override, bool timeout)
 {
   bool en = enabled();
-  if (override && en) {
+  if (en && timeout) {
+    override = false;
+  }
+  if (en && override) {
     enable_ = false;
   }
   override_steering_ = override;
@@ -893,7 +864,7 @@ void DbwNode::overrideSteering(bool override)
 void DbwNode::overrideGear(bool override)
 {
   bool en = enabled();
-  if (override && en) {
+  if (en && override) {
     enable_ = false;
   }
   override_gear_ = override;
