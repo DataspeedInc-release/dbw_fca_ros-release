@@ -1,3 +1,31 @@
+## dbw_fca_ros (melodic) - 1.0.0-0
+
+The packages in the `dbw_fca_ros` repository were released into the `melodic` distro by running `/usr/bin/bloom-release dbw_fca_ros --rosdistro melodic` on `Mon, 03 Dec 2018 19:41:36 -0000`
+
+These packages were released:
+- `dbw_fca`
+- `dbw_fca_can`
+- `dbw_fca_description`
+- `dbw_fca_joystick_demo`
+- `dbw_fca_msgs`
+
+Version of package(s) in repository `dbw_fca_ros`:
+
+- upstream repository: https://bitbucket.org/DataspeedInc/dbw_fca_ros
+- release repository: https://github.com/DataspeedInc-release/dbw_fca_ros-release.git
+- rosdistro version: `0.0.2-0`
+- old version: `0.0.2-0`
+- new version: `1.0.0-0`
+
+Versions of tools used:
+
+- bloom version: `0.6.9`
+- catkin_pkg version: `0.4.9`
+- rosdep version: `0.13.0`
+- rosdistro version: `0.7.0`
+- vcstools version: `0.1.40`
+
+
 ## dbw_fca_ros (indigo) - 0.0.2-0
 
 The packages in the `dbw_fca_ros` repository were released into the `indigo` distro by running `/usr/bin/bloom-release dbw_fca_ros --rosdistro indigo --track indigo` on `Wed, 24 Oct 2018 00:25:30 -0000`
