@@ -82,11 +82,15 @@ private:
   bool signal_; // Send turn signal commands
 
   // Parameters
+  float brake_gain_; // Adjust brake value
+  float throttle_gain_; // Adjust throttle value
+
+  // Parameters
   bool ignore_; // Ignore driver overrides
   bool enable_; // Use enable and disable buttons
   bool count_; // Increment counter to enable watchdog
   bool strq_; // Steering torque command (otherwise angle)
-  double svel_; // Steering command speed
+  float svel_; // Steering command speed
 
   // Variables
   ros::Timer timer_;
