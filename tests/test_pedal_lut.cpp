@@ -111,6 +111,25 @@ TEST(pedal_lut, throttlePedalFromPercent)
   EXPECT_NEAR((float)0.655, throttlePedalFromPercent(0.7), (float)0.001);
 }
 
+// Test converting from throttle pedal position to throttle percent
+TEST(pedal_lut, throttlePercentFromPedal)
+{
+  // Out of range
+  EXPECT_EQ((float)0.0, throttlePercentFromPedal(-INFINITY));
+  EXPECT_EQ((float)0.0, throttlePercentFromPedal(-1.0));
+  EXPECT_EQ((float)1.0, throttlePercentFromPedal(1.0));
+  EXPECT_EQ((float)1.0, throttlePercentFromPedal(INFINITY));
+
+  // Extreme values
+  EXPECT_EQ((float)0.0, throttlePercentFromPedal(0.080));
+  EXPECT_EQ((float)1.0, throttlePercentFromPedal(0.892));
+
+  // Normal values
+  EXPECT_NEAR((float)0.3, throttlePercentFromPedal(0.343), (float)0.001);
+  EXPECT_NEAR((float)0.5, throttlePercentFromPedal(0.497), (float)0.001);
+  EXPECT_NEAR((float)0.7, throttlePercentFromPedal(0.655), (float)0.001);
+}
+
 int main(int argc, char **argv)
 {
   testing::InitGoogleTest(&argc, argv);
