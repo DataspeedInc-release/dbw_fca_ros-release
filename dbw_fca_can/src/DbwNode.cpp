@@ -41,14 +41,14 @@ namespace dbw_fca_can
 
 // Latest firmware versions
 PlatformMap FIRMWARE_LATEST({
-  {PlatformVersion(P_FCA_RU,  M_BPEC,  ModuleVersion(0,1,4))},
-  {PlatformVersion(P_FCA_RU,  M_TPEC,  ModuleVersion(0,1,4))},
-  {PlatformVersion(P_FCA_RU,  M_STEER, ModuleVersion(0,1,4))},
-  {PlatformVersion(P_FCA_RU,  M_SHIFT, ModuleVersion(0,1,4))},
-  {PlatformVersion(P_FCA_WK2, M_TPEC,  ModuleVersion(0,0,2))},
-  {PlatformVersion(P_FCA_WK2, M_STEER, ModuleVersion(0,0,2))},
-  {PlatformVersion(P_FCA_WK2, M_SHIFT, ModuleVersion(0,0,2))},
-  {PlatformVersion(P_FCA_WK2, M_ABS,   ModuleVersion(0,0,2))},
+  {PlatformVersion(P_FCA_RU,  M_BPEC,  ModuleVersion(1,0,0))},
+  {PlatformVersion(P_FCA_RU,  M_TPEC,  ModuleVersion(1,0,0))},
+  {PlatformVersion(P_FCA_RU,  M_STEER, ModuleVersion(1,0,0))},
+  {PlatformVersion(P_FCA_RU,  M_SHIFT, ModuleVersion(1,0,0))},
+  {PlatformVersion(P_FCA_WK2, M_TPEC,  ModuleVersion(0,1,0))},
+  {PlatformVersion(P_FCA_WK2, M_STEER, ModuleVersion(0,1,0))},
+  {PlatformVersion(P_FCA_WK2, M_SHIFT, ModuleVersion(0,1,0))},
+  {PlatformVersion(P_FCA_WK2, M_ABS,   ModuleVersion(0,1,0))},
 });
 
 DbwNode::DbwNode(ros::NodeHandle &node, ros::NodeHandle &priv_nh)
@@ -170,6 +170,7 @@ void DbwNode::recvCAN(const can_msgs::Frame::ConstPtr& msg)
           timeoutBrake(ptr->TMOUT, ptr->ENABLED);
           dbw_fca_msgs::BrakeReport out;
           out.header.stamp = msg->header.stamp;
+          ///@TODO: Multiplex PI/PC/PO types
           out.pedal_input  = (float)ptr->PI / UINT16_MAX;
           out.pedal_cmd    = (float)ptr->PC / UINT16_MAX;
           out.pedal_output = (float)ptr->PO / UINT16_MAX;
@@ -571,6 +572,11 @@ void DbwNode::recvBrakeCmd(const dbw_fca_msgs::BrakeCmd::ConstPtr& msg)
         // CMD_TORQUE_RQ must be forwarded, there is no local implementation
         ptr->CMD_TYPE = dbw_fca_msgs::BrakeCmd::CMD_TORQUE_RQ;
         ptr->PCMD = std::max((float)0.0, std::min((float)UINT16_MAX, msg->pedal_cmd));
+        break;
+      case dbw_fca_msgs::BrakeCmd::CMD_DECEL:
+        // CMD_DECEL must be forwarded, there is no local implementation
+        ptr->CMD_TYPE = dbw_fca_msgs::BrakeCmd::CMD_DECEL;
+        ptr->PCMD = std::max((float)0.0, std::min((float)10e3, msg->pedal_cmd * 1e3f));
         break;
     }
     if (msg->enable) {
