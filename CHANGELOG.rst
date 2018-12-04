@@ -2,6 +2,16 @@
 Changelog for package dbw_fca_can
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.0 (2018-11-30)
+------------------
+* Updated firmware versions
+* Added BTYPE (brake type) bit
+* Added CMD_DECEL brake command type (only for non-hybrid platforms)
+* Added dataspeed_ulc_can to dbw.launch
+* Added throttlePercentFromPedal lookup table function and corresponding test
+* Use the ${catkin_EXPORTED_TARGETS} macro for target dependencies
+* Contributors: Kevin Hallenbeck, Micho Radovnikovich
+
 0.0.2 (2018-10-23)
 ------------------
 * Updated firmware versions
