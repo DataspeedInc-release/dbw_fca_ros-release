@@ -2,6 +2,9 @@
 Changelog for package dbw_fca_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.1 (2019-03-01)
+------------------
+
 1.0.0 (2018-11-30)
 ------------------
 * Added CMD_DECEL brake command type (only for non-hybrid platforms)
