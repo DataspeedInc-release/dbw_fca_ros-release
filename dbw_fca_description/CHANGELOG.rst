@@ -2,6 +2,9 @@
 Changelog for package dbw_fca_description
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.1 (2019-03-01)
+------------------
+
 1.0.0 (2018-11-30)
 ------------------
 * Restructured dbw_fca_description package
