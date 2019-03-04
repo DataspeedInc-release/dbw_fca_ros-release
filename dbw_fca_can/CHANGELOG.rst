@@ -2,6 +2,14 @@
 Changelog for package dbw_fca_can
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.1 (2019-03-01)
+------------------
+* Updated firmware versions
+* Added support for firmware change that uses SVEL resolution of 4 deg/s
+* Refactored tcpNoDelay() for subscribers
+* Added missing tests for PlatformVersion.h
+* Contributors: Kevin Hallenbeck, Micho Radovnikovich
+
 1.0.0 (2018-11-30)
 ------------------
 * Updated firmware versions

@@ -41,14 +41,20 @@ namespace dbw_fca_can
 
 // Latest firmware versions
 PlatformMap FIRMWARE_LATEST({
-  {PlatformVersion(P_FCA_RU,  M_BPEC,  ModuleVersion(1,0,0))},
-  {PlatformVersion(P_FCA_RU,  M_TPEC,  ModuleVersion(1,0,0))},
-  {PlatformVersion(P_FCA_RU,  M_STEER, ModuleVersion(1,0,0))},
-  {PlatformVersion(P_FCA_RU,  M_SHIFT, ModuleVersion(1,0,0))},
-  {PlatformVersion(P_FCA_WK2, M_TPEC,  ModuleVersion(0,1,0))},
-  {PlatformVersion(P_FCA_WK2, M_STEER, ModuleVersion(0,1,0))},
-  {PlatformVersion(P_FCA_WK2, M_SHIFT, ModuleVersion(0,1,0))},
-  {PlatformVersion(P_FCA_WK2, M_ABS,   ModuleVersion(0,1,0))},
+  {PlatformVersion(P_FCA_RU,  M_BPEC,  ModuleVersion(1,1,0))},
+  {PlatformVersion(P_FCA_RU,  M_TPEC,  ModuleVersion(1,1,0))},
+  {PlatformVersion(P_FCA_RU,  M_STEER, ModuleVersion(1,1,0))},
+  {PlatformVersion(P_FCA_RU,  M_SHIFT, ModuleVersion(1,1,0))},
+  {PlatformVersion(P_FCA_WK2, M_TPEC,  ModuleVersion(0,2,0))},
+  {PlatformVersion(P_FCA_WK2, M_STEER, ModuleVersion(0,2,0))},
+  {PlatformVersion(P_FCA_WK2, M_SHIFT, ModuleVersion(0,2,0))},
+  {PlatformVersion(P_FCA_WK2, M_ABS,   ModuleVersion(0,2,0))},
+});
+
+// Minimum firmware versions required for using the new SVEL resolution of 4 deg/s
+PlatformMap FIRMWARE_HIGH_RATE_LIMIT({
+  {PlatformVersion(P_FCA_RU,  M_STEER, ModuleVersion(1,1,0))},
+  {PlatformVersion(P_FCA_WK2, M_STEER, ModuleVersion(0,2,0))},
 });
 
 DbwNode::DbwNode(ros::NodeHandle &node, ros::NodeHandle &priv_nh)
@@ -112,7 +118,7 @@ DbwNode::DbwNode(ros::NodeHandle &node, ros::NodeHandle &priv_nh)
   joint_state_.name[JOINT_SL] = "steer_fl";
   joint_state_.name[JOINT_SR] = "steer_fr";
 
-  // Set up Publishers
+  // Setup Publishers
   pub_can_ = node.advertise<can_msgs::Frame>("can_tx", 10);
   pub_brake_ = node.advertise<dbw_fca_msgs::BrakeReport>("brake_report", 2);
   pub_throttle_ = node.advertise<dbw_fca_msgs::ThrottleReport>("throttle_report", 2);
@@ -129,17 +135,18 @@ DbwNode::DbwNode(ros::NodeHandle &node, ros::NodeHandle &priv_nh)
   pub_sys_enable_ = node.advertise<std_msgs::Bool>("dbw_enabled", 1, true);
   publishDbwEnabled();
 
-  // Set up Subscribers
-  sub_enable_ = node.subscribe("enable", 10, &DbwNode::recvEnable, this, ros::TransportHints().tcpNoDelay(true));
-  sub_disable_ = node.subscribe("disable", 10, &DbwNode::recvDisable, this, ros::TransportHints().tcpNoDelay(true));
-  sub_can_ = node.subscribe("can_rx", 100, &DbwNode::recvCAN, this, ros::TransportHints().tcpNoDelay(true));
-  sub_brake_ = node.subscribe("brake_cmd", 1, &DbwNode::recvBrakeCmd, this, ros::TransportHints().tcpNoDelay(true));
-  sub_throttle_ = node.subscribe("throttle_cmd", 1, &DbwNode::recvThrottleCmd, this, ros::TransportHints().tcpNoDelay(true));
-  sub_steering_ = node.subscribe("steering_cmd", 1, &DbwNode::recvSteeringCmd, this, ros::TransportHints().tcpNoDelay(true));
-  sub_gear_ = node.subscribe("gear_cmd", 1, &DbwNode::recvGearCmd, this, ros::TransportHints().tcpNoDelay(true));
-  sub_turn_signal_ = node.subscribe("turn_signal_cmd", 1, &DbwNode::recvTurnSignalCmd, this, ros::TransportHints().tcpNoDelay(true));
+  // Setup Subscribers
+  const ros::TransportHints NODELAY = ros::TransportHints().tcpNoDelay();
+  sub_enable_ = node.subscribe("enable", 10, &DbwNode::recvEnable, this, NODELAY);
+  sub_disable_ = node.subscribe("disable", 10, &DbwNode::recvDisable, this, NODELAY);
+  sub_can_ = node.subscribe("can_rx", 100, &DbwNode::recvCAN, this, NODELAY);
+  sub_brake_ = node.subscribe("brake_cmd", 1, &DbwNode::recvBrakeCmd, this, NODELAY);
+  sub_throttle_ = node.subscribe("throttle_cmd", 1, &DbwNode::recvThrottleCmd, this, NODELAY);
+  sub_steering_ = node.subscribe("steering_cmd", 1, &DbwNode::recvSteeringCmd, this, NODELAY);
+  sub_gear_ = node.subscribe("gear_cmd", 1, &DbwNode::recvGearCmd, this, NODELAY);
+  sub_turn_signal_ = node.subscribe("turn_signal_cmd", 1, &DbwNode::recvTurnSignalCmd, this, NODELAY);
 
-  // Set up Timer
+  // Setup Timer
   timer_ = node.createTimer(ros::Duration(1 / 20.0), &DbwNode::timerCallback, this);
 }
 
@@ -651,7 +658,11 @@ void DbwNode::recvSteeringCmd(const dbw_fca_msgs::SteeringCmd::ConstPtr& msg)
       case dbw_fca_msgs::SteeringCmd::CMD_ANGLE:
         ptr->SCMD = std::max((float)-INT16_MAX, std::min((float)INT16_MAX, (float)(msg->steering_wheel_angle_cmd * (180 / M_PI * 10))));
         if (fabsf(msg->steering_wheel_angle_velocity) > 0) {
-          ptr->SVEL = std::max((float)1, std::min((float)254, (float)roundf(fabsf(msg->steering_wheel_angle_velocity) * 180 / M_PI / 2)));
+          if (firmware_.findPlatform(M_STEER) >= FIRMWARE_HIGH_RATE_LIMIT) {
+            ptr->SVEL = std::max((float)1, std::min((float)254, (float)roundf(fabsf(msg->steering_wheel_angle_velocity) * 180 / M_PI / 4)));
+          } else {
+            ptr->SVEL = std::max((float)1, std::min((float)254, (float)roundf(fabsf(msg->steering_wheel_angle_velocity) * 180 / M_PI / 2)));
+          }
         }
         ptr->CMD_TYPE = dbw_fca_msgs::SteeringCmd::CMD_ANGLE;
         break;
