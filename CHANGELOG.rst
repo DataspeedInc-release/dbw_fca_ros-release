@@ -2,6 +2,9 @@
 Changelog for package dbw_fca_joystick_demo
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.1 (2019-03-01)
+------------------
+
 1.0.0 (2018-11-30)
 ------------------
 * Use the ${catkin_EXPORTED_TARGETS} macro for target dependencies
