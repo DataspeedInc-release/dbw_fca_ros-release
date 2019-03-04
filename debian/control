@@ -1,0 +1,13 @@
+Source: ros-indigo-dbw-fca
+Section: misc
+Priority: extra
+Maintainer: Kevin Hallenbeck <khallenbeck@dataspeedinc.com>
+Build-Depends: debhelper (>= 9.0.0), ros-indigo-catkin
+Homepage: http://dataspeedinc.com
+Standards-Version: 3.9.2
+
+Package: ros-indigo-dbw-fca
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}, ros-indigo-dbw-fca-can, ros-indigo-dbw-fca-description, ros-indigo-dbw-fca-joystick-demo, ros-indigo-dbw-fca-msgs
+Description: Drive-by-wire interface to the Dataspeed Inc.
+ Chrysler Pacifica DBW kit
