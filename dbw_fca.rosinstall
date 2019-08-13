@@ -6,7 +6,7 @@
     local-name: dataspeed_can
     uri: https://bitbucket.org/DataspeedInc/dataspeed_can
     version: default
-- hg:
+- git:
     local-name: dbw_fca_ros
-    uri: https://bitbucket.org/DataspeedInc/dbw_fca_ros
-    version: default
+    uri: https://bitbucket.org/DataspeedInc/dbw_fca_ros.git
+    version: master
