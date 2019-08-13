@@ -11,6 +11,10 @@ float32 torque_input
 float32 torque_cmd
 float32 torque_output
 
+# Braking decel (m/s^2)
+float32 decel_cmd
+float32 decel_output
+
 # Status
 bool enabled  # Enabled
 bool override # Driver override
