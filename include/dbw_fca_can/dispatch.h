@@ -1,7 +1,7 @@
 /*********************************************************************
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2018, Dataspeed Inc.
+ *  Copyright (c) 2018-2019, Dataspeed Inc.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -199,6 +199,15 @@ typedef struct {
 } MsgReportWheelPosition;
 
 typedef struct {
+  int16_t  fuel_level :11;    // 0.18696 %
+  uint8_t :5;
+  uint8_t :8;
+  uint8_t  battery_12v :8;    // 0.0625 V
+  uint32_t odometer :24;      // 0.1 km
+  uint8_t :8;
+} MsgReportFuelLevel;
+
+typedef struct {
   uint32_t brake_torque_request :12;
   uint32_t brake_torque_actual :12;
   uint32_t brake_pc :8;
@@ -212,7 +221,8 @@ typedef struct {
   int16_t axle_torque :15;
   int16_t :1;
   uint8_t throttle_pc :8;
-  uint8_t :8;
+  uint8_t gear_num :5;
+  uint8_t :3;
   uint8_t :8;
   uint8_t :8;
   uint8_t :8;
@@ -220,20 +230,23 @@ typedef struct {
 } MsgReportThrottleInfo;
 
 typedef enum {
-  LIC_MUX_F0 = 0x00, // Feature 0 (Main)
-  LIC_MUX_MAC   = 0x80,
-  LIC_MUX_DATE0 = 0x81,
-  LIC_MUX_DATE1 = 0x82,
-  LIC_MUX_VIN0  = 0x83,
-  LIC_MUX_VIN1  = 0x84,
-  LIC_MUX_VIN2  = 0x85,
+  LIC_MUX_F0     = 0x00, // Feature 0 (Main)
+  LIC_MUX_LDATE0 = 0x41,
+  LIC_MUX_LDATE1 = 0x42,
+  LIC_MUX_MAC    = 0x80,
+  LIC_MUX_BDATE0 = 0x81,
+  LIC_MUX_BDATE1 = 0x82,
+  LIC_MUX_VIN0   = 0x83,
+  LIC_MUX_VIN1   = 0x84,
+  LIC_MUX_VIN2   = 0x85,
 } LicenseMux;
 typedef struct {
   uint8_t mux;
   uint8_t ready :1;
   uint8_t trial :1;
   uint8_t expired :1;
-  uint8_t :5;
+  uint8_t :1;
+  uint8_t module :4;
   union {
     struct {
       uint8_t enabled :1;
@@ -243,6 +256,22 @@ typedef struct {
       uint16_t trials_used;
       uint16_t trials_left;
     } license;
+    struct {
+        uint8_t ldate0;
+        uint8_t ldate1;
+        uint8_t ldate2;
+        uint8_t ldate3;
+        uint8_t ldate4;
+        uint8_t ldate5;
+    } ldate0;
+    struct {
+        uint8_t ldate6;
+        uint8_t ldate7;
+        uint8_t ldate8;
+        uint8_t ldate9;
+        uint8_t :8;
+        uint8_t :8;
+    } ldate1;    
     struct {
       uint8_t addr0;
       uint8_t addr1;
@@ -258,7 +287,7 @@ typedef struct {
       uint8_t date3;
       uint8_t date4;
       uint8_t date5;
-    } date0;
+    } bdate0;
     struct {
       uint8_t date6;
       uint8_t date7;
@@ -266,7 +295,7 @@ typedef struct {
       uint8_t date9;
       uint8_t :8;
       uint8_t :8;
-    } date1;
+    } bdate1;
     struct {
       uint8_t vin00;
       uint8_t vin01;
@@ -316,6 +345,7 @@ static void dispatchAssertSizes() {
   BUILD_ASSERT(6 == sizeof(MsgMiscReport));
   BUILD_ASSERT(8 == sizeof(MsgReportWheelSpeed));
   BUILD_ASSERT(8 == sizeof(MsgReportWheelPosition));
+  BUILD_ASSERT(8 == sizeof(MsgReportFuelLevel));
   BUILD_ASSERT(8 == sizeof(MsgReportBrakeInfo));
   BUILD_ASSERT(8 == sizeof(MsgReportThrottleInfo));
   BUILD_ASSERT(8 == sizeof(MsgLicense));
@@ -336,6 +366,7 @@ enum {
   ID_MISC_REPORT            = 0x069,
   ID_REPORT_WHEEL_SPEED     = 0x06A,
   ID_REPORT_WHEEL_POSITION  = 0x070,
+  ID_REPORT_FUEL_LEVEL      = 0x072,
   ID_REPORT_BRAKE_INFO      = 0x074,
   ID_REPORT_THROTTLE_INFO   = 0x075,
   ID_LICENSE                = 0x07E,
