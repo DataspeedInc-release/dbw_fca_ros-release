@@ -1,6 +1,6 @@
 # Steering Wheel
 float32 steering_wheel_angle_cmd        # rad, range -9.6 to 9.6
-float32 steering_wheel_angle_velocity   # rad/s, range 0 to 8.7, 0 = maximum
+float32 steering_wheel_angle_velocity   # rad/s, range 0 to 17.5, 0 = maximum
 float32 steering_wheel_torque_cmd       # Nm, range -5.0 to 5.0
 uint8 cmd_type
 
@@ -24,6 +24,6 @@ uint8 CMD_ANGLE=0
 uint8 CMD_TORQUE=1
 
 # Maximum values
-float32 ANGLE_MAX=9.6    # rad, maximum angle
-float32 VELOCITY_MAX=8.7 # rad/s, maximum velocity
-float32 TORQUE_MAX=5.0   # Nm, maximum torque
+float32 ANGLE_MAX=9.6     # rad, maximum angle
+float32 VELOCITY_MAX=17.5 # rad/s, maximum velocity
+float32 TORQUE_MAX=5.0    # Nm, maximum torque

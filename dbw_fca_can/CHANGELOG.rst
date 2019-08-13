@@ -2,6 +2,34 @@
 Changelog for package dbw_fca_can
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.6 (2019-08-13)
+------------------
+* Updated firmware versions
+* Updated website maintenance link
+* Contributors: Kevin Hallenbeck
+
+1.0.5 (2019-07-24)
+------------------
+* Extend licensing to each module
+* Contributors: Kevin Hallenbeck, Sun Hwang
+
+1.0.4 (2019-07-11)
+------------------
+* Added support for non-hybrid brake report values
+* Added gear number to ThrottleInfoReport
+* Contributors: Kevin Hallenbeck, Sun Hwang
+
+1.0.3 (2019-05-03)
+------------------
+* Added warnings for unknown and unsupported command types
+* Added FORD_C1 platform
+* Added fuel level report message
+* Added casts to force single precision floating point math
+* Contributors: Kevin Hallenbeck
+
+1.0.2 (2019-03-14)
+------------------
+
 1.0.1 (2019-03-01)
 ------------------
 * Updated firmware versions
