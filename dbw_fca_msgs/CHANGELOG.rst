@@ -2,6 +2,27 @@
 Changelog for package dbw_fca_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.6 (2019-08-13)
+------------------
+
+1.0.5 (2019-07-24)
+------------------
+
+1.0.4 (2019-07-11)
+------------------
+* Added support for non-hybrid brake report values
+* Added gear number to ThrottleInfoReport
+* Contributors: Kevin Hallenbeck, Sun Hwang
+
+1.0.3 (2019-05-03)
+------------------
+* Updated maximum steering wheel velocity in command message
+* Added fuel level report message
+* Contributors: Kevin Hallenbeck
+
+1.0.2 (2019-03-14)
+------------------
+
 1.0.1 (2019-03-01)
 ------------------
 
