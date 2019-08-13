@@ -1,0 +1,59 @@
+ros-melodic-dbw-fca-description (1.0.6-1stretch) stretch; urgency=high
+
+
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Tue, 13 Aug 2019 04:00:00 -0000
+
+ros-melodic-dbw-fca-description (1.0.5-1stretch) stretch; urgency=high
+
+
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Wed, 24 Jul 2019 04:00:00 -0000
+
+ros-melodic-dbw-fca-description (1.0.4-1stretch) stretch; urgency=high
+
+
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Thu, 11 Jul 2019 04:00:00 -0000
+
+ros-melodic-dbw-fca-description (1.0.3-1stretch) stretch; urgency=high
+
+
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Fri, 03 May 2019 04:00:00 -0000
+
+ros-melodic-dbw-fca-description (1.0.2-1stretch) stretch; urgency=high
+
+  * Updated Dataspeed logos in meshes
+  * Contributors: Micho Radovnikovich
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Thu, 14 Mar 2019 04:00:00 -0000
+
+ros-melodic-dbw-fca-description (1.0.1-1stretch) stretch; urgency=high
+
+
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Fri, 01 Mar 2019 05:00:00 -0000
+
+ros-melodic-dbw-fca-description (1.0.0-1stretch) stretch; urgency=high
+
+  * Restructured dbw_fca_description package
+  * Contributors: Micho Radovnikovich
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Fri, 30 Nov 2018 05:00:00 -0000
+
+ros-melodic-dbw-fca-description (0.0.2-1stretch) stretch; urgency=high
+
+  * Removed outdated dependency on dbw_mkz_description
+  * Contributors: Kevin Hallenbeck
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Tue, 23 Oct 2018 04:00:00 -0000
+
+ros-melodic-dbw-fca-description (0.0.1-1stretch) stretch; urgency=high
+
+  * Initial release
+  * Contributors: Kevin Hallenbeck
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Wed, 08 Aug 2018 04:00:00 -0000
+
+
