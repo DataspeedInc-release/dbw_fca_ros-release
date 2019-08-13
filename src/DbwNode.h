@@ -1,7 +1,7 @@
 /*********************************************************************
  * Software License Agreement (BSD License)
  *
- *  Copyright (c) 2018, Dataspeed Inc.
+ *  Copyright (c) 2018-2019, Dataspeed Inc.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -51,6 +51,7 @@
 #include <dbw_fca_msgs/Misc1Report.h>
 #include <dbw_fca_msgs/WheelPositionReport.h>
 #include <dbw_fca_msgs/WheelSpeedReport.h>
+#include <dbw_fca_msgs/FuelLevelReport.h>
 #include <dbw_fca_msgs/BrakeInfoReport.h>
 #include <dbw_fca_msgs/ThrottleInfoReport.h>
 #include <sensor_msgs/JointState.h>
@@ -150,7 +151,8 @@ private:
 
   // Licensing
   std::string vin_;
-  std::string date_;
+  std::string ldate_; // license date
+  std::map<uint8_t, std::string> bdate_;
 
   // Firmware Versions
   PlatformMap firmware_;
@@ -192,6 +194,7 @@ private:
   ros::Publisher pub_misc_1_;
   ros::Publisher pub_wheel_speeds_;
   ros::Publisher pub_wheel_positions_;
+  ros::Publisher pub_fuel_level_;
   ros::Publisher pub_brake_info_;
   ros::Publisher pub_throttle_info_;
   ros::Publisher pub_joint_states_;
