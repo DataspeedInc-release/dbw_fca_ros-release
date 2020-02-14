@@ -20,3 +20,8 @@ bool btn_ld_right     # Left D-Pad Right
 
 # Faults
 bool fault_bus
+
+# Doors
+bool door_rear_left
+bool door_rear_right
+bool door_trunk
