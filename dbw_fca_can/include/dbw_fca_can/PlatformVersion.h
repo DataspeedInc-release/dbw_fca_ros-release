@@ -46,6 +46,7 @@ typedef enum {
   P_FORD_CD4 = 0x00, // Lincoln MKZ, Ford Fusion/Mondeo
   P_FORD_P5  = 0x01, // Ford F150
   P_FORD_C1  = 0x02, // Ford Transit Connect
+  P_FORD_U6  = 0x04, // Lincoln Aviator
   P_FCA_RU   = 0x10, // Chrysler Pacifica
   P_FCA_WK2  = 0x11, // Jeep Grand Cherokee
 } Platform;
@@ -66,6 +67,7 @@ static const char* platformToString(Platform x) {
     case P_FORD_CD4: return "FORD_CD4";
     case P_FORD_P5:  return "FORD_P5";
     case P_FORD_C1:  return "FORD_C1";
+    case P_FORD_U6:  return "FORD_U6";
     case P_FCA_RU:   return "FCA_RU";
     case P_FCA_WK2:  return "FCA_WK2";
     default:         return "UNKNOWN";
@@ -80,8 +82,8 @@ static const char* moduleToString(Module x) {
     case M_SHIFT: return "SHIFT";
     case M_ABS:   return "ABS  ";
     case M_BOO:   return "BOO  ";
-    default:      return "UNKNOWN";
     case M_EPS:   return "EPS  ";
+    default:      return "UNKNOWN";
   }
 }
 
