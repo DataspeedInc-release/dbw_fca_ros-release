@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>dbw_fca</name>
-  <version>1.0.6</version>
+  <version>1.0.9</version>
   <description>
     Drive-by-wire interface to the Dataspeed Inc. Chrysler Pacifica DBW kit
   </description>
