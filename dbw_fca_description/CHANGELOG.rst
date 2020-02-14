@@ -2,6 +2,18 @@
 Changelog for package dbw_fca_description
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.9 (2020-02-14)
+------------------
+
+1.0.8 (2019-10-17)
+------------------
+* Add URDF model and meshes for Jeep Grand Cherokee
+* Add launch file argument to switch between Jeep and Pacifica URDF models
+* Contributors: Micho Radovnikovich
+
+1.0.7 (2019-09-13)
+------------------
+
 1.0.6 (2019-08-13)
 ------------------
 
