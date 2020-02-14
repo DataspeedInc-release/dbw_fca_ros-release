@@ -77,6 +77,8 @@ JoystickDemo::JoystickDemo(ros::NodeHandle &node, ros::NodeHandle &priv_nh) : co
   data_.steering_mult = false;
   data_.throttle_joy = 0.0;
   data_.turn_signal_cmd = dbw_fca_msgs::TurnSignal::NONE;
+  data_.door_select = dbw_fca_msgs::DoorCmd::NONE;
+  data_.door_action = dbw_fca_msgs::DoorCmd::NONE;
   data_.joy_throttle_valid = false;
   data_.joy_brake_valid = false;
 
@@ -182,6 +184,8 @@ void JoystickDemo::cmdCallback(const ros::TimerEvent& event)
   if (signal_) {
     dbw_fca_msgs::TurnSignalCmd msg;
     msg.cmd.value = data_.turn_signal_cmd;
+    msg.door.select = data_.door_select;
+    msg.door.action = data_.door_action;
     pub_turn_signal_.publish(msg);
   }
 }
@@ -239,28 +243,59 @@ void JoystickDemo::recvJoy(const sensor_msgs::Joy::ConstPtr& msg)
 
   // Turn signal
   if (msg->axes[AXIS_TURN_SIG] != joy_.axes[AXIS_TURN_SIG]) {
-    switch (data_.turn_signal_cmd) {
-      case dbw_fca_msgs::TurnSignal::NONE:
-        if (msg->axes[AXIS_TURN_SIG] < -0.5) {
-          data_.turn_signal_cmd = dbw_fca_msgs::TurnSignal::RIGHT;
-        } else if (msg->axes[AXIS_TURN_SIG] > 0.5) {
-          data_.turn_signal_cmd = dbw_fca_msgs::TurnSignal::LEFT;
-        }
-        break;
-      case dbw_fca_msgs::TurnSignal::LEFT:
-        if (msg->axes[AXIS_TURN_SIG] < -0.5) {
-          data_.turn_signal_cmd = dbw_fca_msgs::TurnSignal::RIGHT;
-        } else if (msg->axes[AXIS_TURN_SIG] > 0.5) {
-          data_.turn_signal_cmd = dbw_fca_msgs::TurnSignal::NONE;
-        }
-        break;
-      case dbw_fca_msgs::TurnSignal::RIGHT:
-        if (msg->axes[AXIS_TURN_SIG] < -0.5) {
-          data_.turn_signal_cmd = dbw_fca_msgs::TurnSignal::NONE;
-        } else if (msg->axes[AXIS_TURN_SIG] > 0.5) {
-          data_.turn_signal_cmd = dbw_fca_msgs::TurnSignal::LEFT;
-        }
-        break;
+    if (fabs(msg->axes[AXIS_DOOR_ACTION]) < 0.5) {
+      switch (data_.turn_signal_cmd) {
+        case dbw_fca_msgs::TurnSignal::NONE:
+          if (msg->axes[AXIS_TURN_SIG] < -0.5) {
+            data_.turn_signal_cmd = dbw_fca_msgs::TurnSignal::RIGHT;
+          } else if (msg->axes[AXIS_TURN_SIG] > 0.5) {
+            data_.turn_signal_cmd = dbw_fca_msgs::TurnSignal::LEFT;
+          }
+          break;
+        case dbw_fca_msgs::TurnSignal::LEFT:
+          if (msg->axes[AXIS_TURN_SIG] < -0.5) {
+            data_.turn_signal_cmd = dbw_fca_msgs::TurnSignal::RIGHT;
+          } else if (msg->axes[AXIS_TURN_SIG] > 0.5) {
+            data_.turn_signal_cmd = dbw_fca_msgs::TurnSignal::NONE;
+          }
+          break;
+        case dbw_fca_msgs::TurnSignal::RIGHT:
+          if (msg->axes[AXIS_TURN_SIG] < -0.5) {
+            data_.turn_signal_cmd = dbw_fca_msgs::TurnSignal::NONE;
+          } else if (msg->axes[AXIS_TURN_SIG] > 0.5) {
+            data_.turn_signal_cmd = dbw_fca_msgs::TurnSignal::LEFT;
+          }
+          break;
+      }
+    }
+  }
+
+  // Doors and trunk
+  data_.door_select = dbw_fca_msgs::DoorCmd::NONE;
+  data_.door_action = dbw_fca_msgs::DoorCmd::NONE;
+  if (msg->buttons[BTN_TRUNK_OPEN]) {
+    data_.door_select = dbw_fca_msgs::DoorCmd::TRUNK;
+    data_.door_action = dbw_fca_msgs::DoorCmd::OPEN;
+  } else if (msg->buttons[BTN_TRUNK_CLOSE]) {
+    data_.door_select = dbw_fca_msgs::DoorCmd::TRUNK;
+    data_.door_action = dbw_fca_msgs::DoorCmd::CLOSE;
+  }
+  if (msg->axes[AXIS_DOOR_ACTION] > 0.5) {
+    if (msg->axes[AXIS_DOOR_SELECT] < -0.5) {
+      data_.door_select = dbw_fca_msgs::DoorCmd::RIGHT;
+      data_.door_action = dbw_fca_msgs::DoorCmd::OPEN;
+    } else if (msg->axes[AXIS_TURN_SIG] > 0.5) {
+      data_.door_select = dbw_fca_msgs::DoorCmd::LEFT;
+      data_.door_action = dbw_fca_msgs::DoorCmd::OPEN;
+    }
+  }
+  if (msg->axes[AXIS_DOOR_ACTION] < -0.5) {
+    if (msg->axes[AXIS_DOOR_SELECT] < -0.5) {
+      data_.door_select = dbw_fca_msgs::DoorCmd::RIGHT;
+      data_.door_action = dbw_fca_msgs::DoorCmd::CLOSE;
+    } else if (msg->axes[AXIS_TURN_SIG] > 0.5) {
+      data_.door_select = dbw_fca_msgs::DoorCmd::LEFT;
+      data_.door_action = dbw_fca_msgs::DoorCmd::CLOSE;
     }
   }
 
