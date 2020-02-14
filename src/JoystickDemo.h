@@ -53,6 +53,8 @@ typedef struct {
   bool steering_mult;
   int gear_cmd;
   int turn_signal_cmd;
+  int door_select;
+  int door_action;
   bool joy_throttle_valid;
   bool joy_brake_valid;
 } JoystickDataStruct;
@@ -108,6 +110,8 @@ private:
     BTN_DISABLE = 4,
     BTN_STEER_MULT_1 = 6,
     BTN_STEER_MULT_2 = 7,
+    BTN_TRUNK_OPEN = 9,
+    BTN_TRUNK_CLOSE = 10,
     BTN_COUNT_X = 11,
     BTN_COUNT_D = 12,
     AXIS_THROTTLE = 5,
@@ -115,6 +119,8 @@ private:
     AXIS_STEER_1 = 0,
     AXIS_STEER_2 = 3,
     AXIS_TURN_SIG = 6,
+    AXIS_DOOR_SELECT = 6,
+    AXIS_DOOR_ACTION = 7,
     AXIS_COUNT_D = 6,
     AXIS_COUNT_X = 8,
   };
