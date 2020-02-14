@@ -60,14 +60,14 @@ namespace dbw_fca_can
 
 // Latest firmware versions
 PlatformMap FIRMWARE_LATEST({
-  {PlatformVersion(P_FCA_RU,  M_BPEC,  ModuleVersion(1,2,0))},
-  {PlatformVersion(P_FCA_RU,  M_TPEC,  ModuleVersion(1,2,0))},
-  {PlatformVersion(P_FCA_RU,  M_STEER, ModuleVersion(1,2,0))},
-  {PlatformVersion(P_FCA_RU,  M_SHIFT, ModuleVersion(1,2,0))},
-  {PlatformVersion(P_FCA_WK2, M_TPEC,  ModuleVersion(1,0,0))},
-  {PlatformVersion(P_FCA_WK2, M_STEER, ModuleVersion(1,0,0))},
-  {PlatformVersion(P_FCA_WK2, M_SHIFT, ModuleVersion(1,0,0))},
-  {PlatformVersion(P_FCA_WK2, M_ABS,   ModuleVersion(1,0,0))},
+  {PlatformVersion(P_FCA_RU,  M_BPEC,  ModuleVersion(1,3,0))},
+  {PlatformVersion(P_FCA_RU,  M_TPEC,  ModuleVersion(1,3,0))},
+  {PlatformVersion(P_FCA_RU,  M_STEER, ModuleVersion(1,3,0))},
+  {PlatformVersion(P_FCA_RU,  M_SHIFT, ModuleVersion(1,3,0))},
+  {PlatformVersion(P_FCA_WK2, M_TPEC,  ModuleVersion(1,1,0))},
+  {PlatformVersion(P_FCA_WK2, M_STEER, ModuleVersion(1,1,0))},
+  {PlatformVersion(P_FCA_WK2, M_SHIFT, ModuleVersion(1,1,0))},
+  {PlatformVersion(P_FCA_WK2, M_ABS,   ModuleVersion(1,1,0))},
 });
 
 // Minimum firmware versions required for using the new SVEL resolution of 4 deg/s
@@ -279,15 +279,29 @@ void DbwNode::recvCAN(const can_msgs::Frame::ConstPtr& msg)
           timeoutSteering(ptr->TMOUT, ptr->ENABLED);
           dbw_fca_msgs::SteeringReport out;
           out.header.stamp = msg->header.stamp;
-          out.steering_wheel_angle = (float)ptr->ANGLE * (float)(0.1 * M_PI / 180);
+          if ((uint16_t)ptr->ANGLE == 0x8000) {
+            out.steering_wheel_angle = NAN;
+          } else {
+            out.steering_wheel_angle = (float)ptr->ANGLE * (float)(0.1 * M_PI / 180);
+          }
           out.steering_wheel_cmd_type = ptr->TMODE ? dbw_fca_msgs::SteeringReport::CMD_TORQUE : dbw_fca_msgs::SteeringReport::CMD_ANGLE;
-          if (out.steering_wheel_cmd_type == dbw_fca_msgs::SteeringReport::CMD_ANGLE) {
+          if ((uint16_t)ptr->CMD == 0xC000) {
+            out.steering_wheel_cmd = NAN;
+          } else if (out.steering_wheel_cmd_type == dbw_fca_msgs::SteeringReport::CMD_ANGLE) {
             out.steering_wheel_cmd = (float)ptr->CMD * (float)(0.1 * M_PI / 180);
           } else {
             out.steering_wheel_cmd = (float)ptr->CMD / 128.0f;
           }
-          out.steering_wheel_torque = (float)ptr->TORQUE * (float)0.0625;
-          out.speed = (float)ptr->SPEED * (float)(0.01 / 3.6) * (float)speedSign();
+          if ((uint8_t)ptr->TORQUE == 0x80) {
+            out.steering_wheel_torque = NAN;
+          } else {
+            out.steering_wheel_torque = (float)ptr->TORQUE * (float)0.0625;
+          }
+          if (ptr->SPEED == 0xFFFF) {
+            out.speed = NAN;
+          } else {
+            out.speed = (float)ptr->SPEED * (float)(0.01 / 3.6) * (float)speedSign();
+          }
           out.enabled = ptr->ENABLED ? true : false;
           out.override = ptr->OVERRIDE ? true : false;
           out.fault_wdc = ptr->FLTWDC ? true : false;
@@ -381,6 +395,9 @@ void DbwNode::recvCAN(const can_msgs::Frame::ConstPtr& msg)
           out.btn_ld_left = ptr->btn_ld_left ? true : false;
           out.btn_ld_right = ptr->btn_ld_right ? true : false;
           out.fault_bus = ptr->FLTBUS ? true : false;
+          out.door_rear_left = ptr->door_rear_left ? true : false;
+          out.door_rear_right = ptr->door_rear_right ? true : false;
+          out.door_trunk = ptr->door_trunk ? true : false;
           pub_misc_1_.publish(out);
         }
         break;
@@ -390,10 +407,26 @@ void DbwNode::recvCAN(const can_msgs::Frame::ConstPtr& msg)
           const MsgReportWheelSpeed *ptr = (const MsgReportWheelSpeed*)msg->data.elems;
           dbw_fca_msgs::WheelSpeedReport out;
           out.header.stamp = msg->header.stamp;
-          out.front_left  = (float)ptr->front_left  * 0.01f;
-          out.front_right = (float)ptr->front_right * 0.01f;
-          out.rear_left   = (float)ptr->rear_left   * 0.01f;
-          out.rear_right  = (float)ptr->rear_right  * 0.01f;
+          if ((uint16_t)ptr->front_left == 0x8000) {
+            out.front_left = NAN;
+          } else {
+            out.front_left = (float)ptr->front_left * 0.01f;
+          }
+          if ((uint16_t)ptr->front_right == 0x8000) {
+            out.front_right = NAN;
+          } else {
+            out.front_right = (float)ptr->front_right * 0.01f;
+          }
+          if ((uint16_t)ptr->rear_left == 0x8000) {
+            out.rear_left = NAN;
+          } else {
+            out.rear_left = (float)ptr->rear_left * 0.01f;
+          }
+          if ((uint16_t)ptr->rear_right == 0x8000) {
+            out.rear_right = NAN;
+          } else {
+            out.rear_right = (float)ptr->rear_right * 0.01f;
+          }
           pub_wheel_speeds_.publish(out);
         }
         break;
@@ -430,10 +463,26 @@ void DbwNode::recvCAN(const can_msgs::Frame::ConstPtr& msg)
           const MsgReportBrakeInfo *ptr = (const MsgReportBrakeInfo*)msg->data.elems;
           dbw_fca_msgs::BrakeInfoReport out;
           out.header.stamp = msg->header.stamp;
-          out.brake_pc = (float)ptr->brake_pc * 0.4;
-          out.brake_torque_request = (float)ptr->brake_torque_request * 3.0f;
-          out.brake_torque_actual = (float)ptr->brake_torque_actual * 3.0f;
-          out.brake_pressure = (float)ptr->brake_pressure * 0.1f;
+          if (ptr->brake_pc == 0xFF) {
+            out.brake_pc = NAN;
+          } else {
+            out.brake_pc = (float)ptr->brake_pc * 0.4f;
+          }
+          if (ptr->brake_torque_request == 0xFFF) {
+            out.brake_torque_request = NAN;
+          } else {
+            out.brake_torque_request = (float)ptr->brake_torque_request * 3.0f;
+          }
+          if (ptr->brake_torque_actual == 0xFFF) {
+            out.brake_torque_actual = NAN;
+          } else {
+            out.brake_torque_actual = (float)ptr->brake_torque_actual * 3.0f;
+          }
+          if (ptr->brake_pressure == 0x7FF) {
+            out.brake_pressure = NAN;
+          } else {
+            out.brake_pressure = (float)ptr->brake_pressure * 0.1f;
+          }
           out.stationary = ptr->stationary;
           pub_brake_info_.publish(out);
         }
@@ -444,8 +493,16 @@ void DbwNode::recvCAN(const can_msgs::Frame::ConstPtr& msg)
           const MsgReportThrottleInfo *ptr = (const MsgReportThrottleInfo*)msg->data.elems;
           dbw_fca_msgs::ThrottleInfoReport out;
           out.header.stamp = msg->header.stamp;
-          out.throttle_pc = (float)ptr->throttle_pc * 0.4f;
-          out.axle_torque = (float)ptr->axle_torque * 1.5625f;
+          if (ptr->throttle_pc == 0xFF) {
+            out.throttle_pc = NAN;
+          } else {
+            out.throttle_pc = (float)ptr->throttle_pc * 0.4f;
+          }
+          if ((uint16_t)ptr->axle_torque == 0xC000) {
+            out.axle_torque = NAN;
+          } else {
+            out.axle_torque = (float)ptr->axle_torque * 1.5625f;
+          }
           out.gear_num.num = ptr->gear_num;
           pub_throttle_info_.publish(out);
         }
@@ -806,6 +863,8 @@ void DbwNode::recvTurnSignalCmd(const dbw_fca_msgs::TurnSignalCmd::ConstPtr& msg
   memset(ptr, 0x00, sizeof(*ptr));
   if (enabled()) {
     ptr->TRNCMD = msg->cmd.value;
+    ptr->DOORSEL = msg->door.select;
+    ptr->DOORCMD = msg->door.action;
   }
   pub_can_.publish(out);
 }
@@ -1161,18 +1220,22 @@ void DbwNode::publishJointStates(const ros::Time &stamp, const dbw_fca_msgs::Ste
 {
   double dt = (stamp - joint_state_.header.stamp).toSec();
   if (steering) {
-    const double L = acker_wheelbase_;
-    const double W = acker_track_;
-    const double r = L / tan(steering->steering_wheel_angle / steering_ratio_);
-    joint_state_.position[JOINT_SL] = atan(L / (r - W/2));
-    joint_state_.position[JOINT_SR] = atan(L / (r + W/2));
-    joint_state_.velocity[JOINT_FL] = steering->speed / wheel_radius_;
-    joint_state_.velocity[JOINT_FR] = steering->speed / wheel_radius_;
-    joint_state_.velocity[JOINT_RL] = steering->speed / wheel_radius_;
-    joint_state_.velocity[JOINT_RR] = steering->speed / wheel_radius_;
+    if (std::isfinite(steering->steering_wheel_angle)) {
+      const double L = acker_wheelbase_;
+      const double W = acker_track_;
+      const double r = L / tan(steering->steering_wheel_angle / steering_ratio_);
+      joint_state_.position[JOINT_SL] = atan(L / (r - W/2));
+      joint_state_.position[JOINT_SR] = atan(L / (r + W/2));
+    }
+    if (std::isfinite(steering->speed)) {
+      joint_state_.velocity[JOINT_FL] = steering->speed / wheel_radius_;
+      joint_state_.velocity[JOINT_FR] = steering->speed / wheel_radius_;
+      joint_state_.velocity[JOINT_RL] = steering->speed / wheel_radius_;
+      joint_state_.velocity[JOINT_RR] = steering->speed / wheel_radius_;
+    }
   }
   if (dt < 0.5) {
-    for (unsigned int i = JOINT_FL; i <= JOINT_RR; i++) {
+    for (size_t i = JOINT_FL; i <= JOINT_RR; i++) {
       joint_state_.position[i] = fmod(joint_state_.position[i] + dt * joint_state_.velocity[i], 2*M_PI);
     }
   }
