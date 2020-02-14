@@ -1,0 +1,80 @@
+ros-kinetic-dbw-fca-joystick-demo (1.0.9-1xenial) xenial; urgency=high
+
+  * Add door commands
+  * Contributors: Kevin Hallenbeck
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Fri, 14 Feb 2020 05:00:00 -0000
+
+ros-kinetic-dbw-fca-joystick-demo (1.0.8-1xenial) xenial; urgency=high
+
+
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Thu, 17 Oct 2019 04:00:00 -0000
+
+ros-kinetic-dbw-fca-joystick-demo (1.0.7-1xenial) xenial; urgency=high
+
+
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Fri, 13 Sep 2019 04:00:00 -0000
+
+ros-kinetic-dbw-fca-joystick-demo (1.0.6-1xenial) xenial; urgency=high
+
+
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Tue, 13 Aug 2019 04:00:00 -0000
+
+ros-kinetic-dbw-fca-joystick-demo (1.0.5-1xenial) xenial; urgency=high
+
+
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Wed, 24 Jul 2019 04:00:00 -0000
+
+ros-kinetic-dbw-fca-joystick-demo (1.0.4-1xenial) xenial; urgency=high
+
+
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Thu, 11 Jul 2019 04:00:00 -0000
+
+ros-kinetic-dbw-fca-joystick-demo (1.0.3-1xenial) xenial; urgency=high
+
+
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Fri, 03 May 2019 04:00:00 -0000
+
+ros-kinetic-dbw-fca-joystick-demo (1.0.2-1xenial) xenial; urgency=high
+
+
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Thu, 14 Mar 2019 04:00:00 -0000
+
+ros-kinetic-dbw-fca-joystick-demo (1.0.1-1xenial) xenial; urgency=high
+
+
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Fri, 01 Mar 2019 05:00:00 -0000
+
+ros-kinetic-dbw-fca-joystick-demo (1.0.0-1xenial) xenial; urgency=high
+
+  * Use the ${catkin_EXPORTED_TARGETS} macro for target dependencies
+  * Removed joystick deadzone
+  * Added parameters for brake and throttle gains (sanitized from 0 to 1)
+  * Contributors: Kevin Hallenbeck
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Fri, 30 Nov 2018 05:00:00 -0000
+
+ros-kinetic-dbw-fca-joystick-demo (0.0.2-1xenial) xenial; urgency=high
+
+  * Added option to command steering torque instead of position
+  * Added option to enable/disable each command topic
+  * Contributors: Kevin Hallenbeck
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Tue, 23 Oct 2018 04:00:00 -0000
+
+ros-kinetic-dbw-fca-joystick-demo (0.0.1-1xenial) xenial; urgency=high
+
+  * Initial release
+  * Contributors: Kevin Hallenbeck
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Wed, 08 Aug 2018 04:00:00 -0000
+
+
