@@ -152,7 +152,9 @@ typedef struct {
 
 typedef struct {
   uint8_t TRNCMD :2;
-  uint8_t :6;
+  uint8_t :2;
+  uint8_t DOORSEL :2;
+  uint8_t DOORCMD :2;
 } MsgTurnSignalCmd;
 
 typedef struct {
@@ -172,7 +174,14 @@ typedef struct {
   uint8_t btn_cc_gap_dec :1;
   uint8_t :1;
   uint8_t FLTBUS :1;
-  uint8_t :8;
+  uint8_t :1;
+  uint8_t :1;
+  uint8_t door_rear_left :1;
+  uint8_t door_rear_right :1;
+  uint8_t :1;
+  uint8_t door_trunk :1;
+  uint8_t :1;
+  uint8_t :1;
   uint8_t :2;
   uint8_t btn_ld_ok :1;
   uint8_t btn_ld_up :1;
