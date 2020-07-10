@@ -159,7 +159,8 @@ typedef struct {
 
 typedef struct {
   uint8_t turn_signal :2;
-  uint8_t :6;
+  uint8_t head_light_hi :2;
+  uint8_t wiper_front :4;
   uint8_t :3;
   uint8_t :1;
   uint8_t :1;
@@ -201,6 +202,52 @@ typedef struct {
 } MsgReportWheelSpeed;
 
 typedef struct {
+  int16_t accel_lat;
+  int16_t accel_long;
+  int16_t accel_vert;
+} MsgReportAccel;
+
+typedef struct {
+  int16_t gyro_roll;
+  int16_t gyro_yaw;
+} MsgReportGyro;
+
+typedef struct {
+  int32_t latitude :31;
+  int32_t lat_valid :1;
+  int32_t longitude :31;
+  int32_t long_valid :1;
+} MsgReportGps1;
+
+typedef struct {
+  uint8_t utc_year :7;
+  uint8_t :1;
+  uint8_t utc_month :4;
+  uint8_t :4;
+  uint8_t utc_day :5;
+  uint8_t :3;
+  uint8_t utc_hours :5;
+  uint8_t :3;
+  uint8_t utc_minutes :6;
+  uint8_t :2;
+  uint8_t utc_seconds :6;
+  uint8_t :2;
+  uint8_t compass_dir :4;
+  uint8_t :4;
+  uint8_t :5;
+  uint8_t :1;
+  uint8_t :1;
+  uint8_t :1;
+} MsgReportGps2;
+
+typedef struct {
+  int32_t dr_latitude :31;
+  int32_t dr_lat_valid :1;
+  int32_t dr_longitude :31;
+  int32_t dr_long_valid :1;
+} MsgReportGps3;
+
+typedef struct {
   int16_t front_left;
   int16_t front_right;
   int16_t rear_left;
@@ -215,6 +262,13 @@ typedef struct {
   uint32_t odometer :24;      // 0.1 km
   uint8_t :8;
 } MsgReportFuelLevel;
+
+typedef struct {
+  uint16_t front_left;
+  uint16_t front_right;
+  uint16_t rear_left;
+  uint16_t rear_right;
+} MsgReportTirePressure;
 
 typedef struct {
   uint32_t brake_torque_request :12;
@@ -353,7 +407,13 @@ static void dispatchAssertSizes() {
   BUILD_ASSERT(1 == sizeof(MsgTurnSignalCmd));
   BUILD_ASSERT(6 == sizeof(MsgMiscReport));
   BUILD_ASSERT(8 == sizeof(MsgReportWheelSpeed));
+  BUILD_ASSERT(6 == sizeof(MsgReportAccel));
+  BUILD_ASSERT(4 == sizeof(MsgReportGyro));
+  BUILD_ASSERT(8 == sizeof(MsgReportGps1));
+  BUILD_ASSERT(8 == sizeof(MsgReportGps2));
+  BUILD_ASSERT(8 == sizeof(MsgReportGps3));
   BUILD_ASSERT(8 == sizeof(MsgReportWheelPosition));
+  BUILD_ASSERT(8 == sizeof(MsgReportTirePressure));
   BUILD_ASSERT(8 == sizeof(MsgReportFuelLevel));
   BUILD_ASSERT(8 == sizeof(MsgReportBrakeInfo));
   BUILD_ASSERT(8 == sizeof(MsgReportThrottleInfo));
@@ -374,7 +434,13 @@ enum {
   ID_MISC_CMD               = 0x068,
   ID_MISC_REPORT            = 0x069,
   ID_REPORT_WHEEL_SPEED     = 0x06A,
+  ID_REPORT_ACCEL           = 0x06B,
+  ID_REPORT_GYRO            = 0x06C,
+  ID_REPORT_GPS1            = 0x06D,
+  ID_REPORT_GPS2            = 0x06E,
+  ID_REPORT_GPS3            = 0x06F,
   ID_REPORT_WHEEL_POSITION  = 0x070,
+  ID_REPORT_TIRE_PRESSURE   = 0x071,
   ID_REPORT_FUEL_LEVEL      = 0x072,
   ID_REPORT_BRAKE_INFO      = 0x074,
   ID_REPORT_THROTTLE_INFO   = 0x075,

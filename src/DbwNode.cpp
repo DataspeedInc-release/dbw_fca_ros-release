@@ -77,7 +77,13 @@ PlatformMap FIRMWARE_HIGH_RATE_LIMIT({
 });
 
 DbwNode::DbwNode(ros::NodeHandle &node, ros::NodeHandle &priv_nh)
+: sync_imu_(10, boost::bind(&DbwNode::recvCanImu, this, _1), ID_REPORT_ACCEL, ID_REPORT_GYRO)
+, sync_gps_(10, boost::bind(&DbwNode::recvCanGps, this, _1), ID_REPORT_GPS1, ID_REPORT_GPS2, ID_REPORT_GPS3)
 {
+  // Reduce synchronization delay
+  sync_imu_.setInterMessageLowerBound(ros::Duration(0.006)); // 20ms period
+  sync_gps_.setInterMessageLowerBound(ros::Duration(0.3)); // 1s period
+
   // Initialize enable state machine
   prev_enable_ = true;
   enable_ = false;
@@ -146,9 +152,14 @@ DbwNode::DbwNode(ros::NodeHandle &node, ros::NodeHandle &priv_nh)
   pub_misc_1_ = node.advertise<dbw_fca_msgs::Misc1Report>("misc_1_report", 2);
   pub_wheel_speeds_ = node.advertise<dbw_fca_msgs::WheelSpeedReport>("wheel_speed_report", 2);
   pub_wheel_positions_ = node.advertise<dbw_fca_msgs::WheelPositionReport>("wheel_position_report", 2);
+  pub_tire_pressure_ = node.advertise<dbw_fca_msgs::TirePressureReport>("tire_pressure_report", 2);
   pub_fuel_level_ = node.advertise<dbw_fca_msgs::FuelLevelReport>("fuel_level_report", 2);
   pub_brake_info_ = node.advertise<dbw_fca_msgs::BrakeInfoReport>("brake_info_report", 2);
   pub_throttle_info_ = node.advertise<dbw_fca_msgs::ThrottleInfoReport>("throttle_info_report", 2);
+  pub_imu_ = node.advertise<sensor_msgs::Imu>("imu/data_raw", 10);
+  pub_gps_fix_ = node.advertise<sensor_msgs::NavSatFix>("gps/fix", 10);
+  pub_gps_time_ = node.advertise<sensor_msgs::TimeReference>("gps/time", 10);
+  pub_gps_fix_dr = node.advertise<sensor_msgs::NavSatFix>("gps_dr/fix", 10);
   pub_joint_states_ = node.advertise<sensor_msgs::JointState>("joint_states", 10);
   pub_twist_ = node.advertise<geometry_msgs::TwistStamped>("twist", 10);
   pub_vin_ = node.advertise<std_msgs::String>("vin", 1, true);
@@ -186,6 +197,8 @@ void DbwNode::recvDisable(const std_msgs::Empty::ConstPtr& msg)
 
 void DbwNode::recvCAN(const can_msgs::Frame::ConstPtr& msg)
 {
+  sync_imu_.processMsg(msg);
+  sync_gps_.processMsg(msg);
   if (!msg->is_rtr && !msg->is_error && !msg->is_extended) {
     switch (msg->id) {
       case ID_BRAKE_REPORT:
@@ -352,14 +365,14 @@ void DbwNode::recvCAN(const can_msgs::Frame::ConstPtr& msg)
                 case dbw_fca_msgs::GearReject::OVERRIDE:
                   ROS_WARN("Gear shift rejected: Override on brake, throttle, or steering");
                   break;
-                case dbw_fca_msgs::GearReject::ROTARY_LOW:
-                  ROS_WARN("Gear shift rejected: Rotary shifter can't shift to Low");
-                  break;
-                case dbw_fca_msgs::GearReject::ROTARY_PARK:
-                  ROS_WARN("Gear shift rejected: Rotary shifter can't shift out of Park");
-                  break;
                 case dbw_fca_msgs::GearReject::VEHICLE:
                   ROS_WARN("Gear shift rejected: Rejected by vehicle, try pressing the brakes");
+                  break;
+                case dbw_fca_msgs::GearReject::UNSUPPORTED:
+                  ROS_WARN("Gear shift rejected: Unsupported gear command");
+                  break;
+                case dbw_fca_msgs::GearReject::FAULT:
+                  ROS_WARN("Gear shift rejected: System in fault state");
                   break;
               }
             }
@@ -381,6 +394,8 @@ void DbwNode::recvCAN(const can_msgs::Frame::ConstPtr& msg)
           dbw_fca_msgs::Misc1Report out;
           out.header.stamp = msg->header.stamp;
           out.turn_signal.value = ptr->turn_signal;
+          out.high_beam.value = ptr->head_light_hi;
+          out.wiper.status = ptr->wiper_front;
           out.btn_cc_on_off = ptr->btn_cc_on_off ? true : false;
           out.btn_cc_res = ptr->btn_cc_res ? true : false;
           out.btn_cc_cncl = ptr->btn_cc_cncl ? true : false;
@@ -443,6 +458,36 @@ void DbwNode::recvCAN(const can_msgs::Frame::ConstPtr& msg)
           pub_wheel_positions_.publish(out);
         }
         break;
+
+     case ID_REPORT_TIRE_PRESSURE:
+        if (msg->dlc >= sizeof(MsgReportTirePressure)) {
+          const MsgReportTirePressure *ptr = (const MsgReportTirePressure*)msg->data.elems;
+          dbw_fca_msgs::TirePressureReport out;
+          out.header.stamp = msg->header.stamp;
+          if (ptr->front_left == 0xFFFF) {
+            out.front_left = NAN;
+          } else {
+            out.front_left = (float)ptr->front_left;
+          }
+          if (ptr->front_right == 0xFFFF) {
+            out.front_right = NAN;
+          } else {
+            out.front_right = (float)ptr->front_right;
+          }
+          if (ptr->rear_left == 0xFFFF) {
+            out.rear_left = NAN;
+          } else {
+            out.rear_left = (float)ptr->rear_left;
+          }
+          if (ptr->rear_right == 0xFFFF) {
+            out.rear_right = NAN;
+          } else {
+            out.rear_right = (float)ptr->rear_right;
+          }
+          pub_tire_pressure_.publish(out);
+        }
+        break;
+
 
       case ID_REPORT_FUEL_LEVEL:
         if (msg->dlc >= 2) {
@@ -667,6 +712,101 @@ void DbwNode::recvCAN(const can_msgs::Frame::ConstPtr& msg)
 #endif
 }
 
+void DbwNode::recvCanImu(const std::vector<can_msgs::Frame::ConstPtr> &msgs) {
+  ROS_ASSERT(msgs.size() == 2);
+  ROS_ASSERT(msgs[0]->id == ID_REPORT_ACCEL);
+  ROS_ASSERT(msgs[1]->id == ID_REPORT_GYRO);
+  if ((msgs[0]->dlc >= sizeof(MsgReportAccel)) && (msgs[1]->dlc >= sizeof(MsgReportGyro))) {
+    const MsgReportAccel *ptr_accel = (const MsgReportAccel*)msgs[0]->data.elems;
+    const MsgReportGyro *ptr_gyro = (const MsgReportGyro*)msgs[1]->data.elems;
+    sensor_msgs::Imu out;
+    out.header.stamp = msgs[0]->header.stamp;
+    out.header.frame_id = frame_id_;
+    out.orientation_covariance[0] = -1; // Orientation not present
+    if ((uint16_t)ptr_accel->accel_long == 0x8000) {
+      out.linear_acceleration.x = NAN;
+    } else {
+      out.linear_acceleration.x = (double)ptr_accel->accel_long * 0.01;
+    }
+    if ((uint16_t)ptr_accel->accel_lat == 0x8000) {
+      out.linear_acceleration.y = NAN;
+    } else {
+      out.linear_acceleration.y = (double)ptr_accel->accel_lat * -0.01;
+    }
+    if ((uint16_t)ptr_gyro->gyro_yaw == 0x8000) {
+      out.angular_velocity.z = NAN;
+    } else {
+      out.angular_velocity.z = (double)ptr_gyro->gyro_yaw * 0.0002;
+    }
+    pub_imu_.publish(out);
+  }
+#if 0
+  ROS_INFO("Time: %u.%u, %u.%u, delta: %fms",
+           msgs[0]->header.stamp.sec, msgs[0]->header.stamp.nsec,
+           msgs[1]->header.stamp.sec, msgs[1]->header.stamp.nsec,
+           labs((msgs[1]->header.stamp - msgs[0]->header.stamp).toNSec()) / 1000000.0);
+#endif
+}
+
+void DbwNode::recvCanGps(const std::vector<can_msgs::Frame::ConstPtr> &msgs) {
+  ROS_ASSERT(msgs.size() == 3);
+  ROS_ASSERT(msgs[0]->id == ID_REPORT_GPS1);
+  ROS_ASSERT(msgs[1]->id == ID_REPORT_GPS2);
+  ROS_ASSERT(msgs[2]->id == ID_REPORT_GPS3);
+  if ((msgs[0]->dlc >= sizeof(MsgReportGps1)) && (msgs[1]->dlc >= sizeof(MsgReportGps2)) && (msgs[2]->dlc >= sizeof(MsgReportGps3))) {
+    const MsgReportGps1 *ptr1 = (const MsgReportGps1*)msgs[0]->data.elems;
+    const MsgReportGps2 *ptr2 = (const MsgReportGps2*)msgs[1]->data.elems;
+    const MsgReportGps3 *ptr3 = (const MsgReportGps3*)msgs[2]->data.elems;
+
+    sensor_msgs::NavSatFix msg_fix;
+    msg_fix.header.stamp =  msgs[0]->header.stamp;
+    msg_fix.latitude = (double)ptr1->latitude / 3e6;
+    msg_fix.longitude = (double)ptr1->longitude / 3e6;
+    msg_fix.altitude = 0.0;
+    msg_fix.position_covariance_type = sensor_msgs::NavSatFix::COVARIANCE_TYPE_UNKNOWN;
+    msg_fix.status.service = sensor_msgs::NavSatStatus::SERVICE_GPS;    
+    msg_fix.status.status = sensor_msgs::NavSatStatus::STATUS_NO_FIX;
+    pub_gps_fix_.publish(msg_fix);
+
+    sensor_msgs::TimeReference msg_time;
+    struct tm unix_time;
+    unix_time.tm_year = ptr2->utc_year + 100; // [1900] <-- [2000]
+    unix_time.tm_mon = ptr2->utc_month - 1;   // [0-11] <-- [1-12]
+    unix_time.tm_mday = ptr2->utc_day;        // [1-31] <-- [1-31]
+    unix_time.tm_hour = ptr2->utc_hours;      // [0-23] <-- [0-23]
+    unix_time.tm_min = ptr2->utc_minutes;     // [0-59] <-- [0-59]
+    unix_time.tm_sec = ptr2->utc_seconds;     // [0-59] <-- [0-59]
+    msg_time.header.stamp = msgs[0]->header.stamp;
+    msg_time.time_ref.sec = timegm(&unix_time);
+    msg_time.time_ref.nsec = 0;
+    pub_gps_time_.publish(msg_time);
+
+    sensor_msgs::NavSatFix msg_fix_dr;
+    msg_fix_dr.header.stamp =  msgs[2]->header.stamp;
+    msg_fix_dr.latitude = (double)ptr3->dr_latitude / 3e6;
+    msg_fix_dr.longitude = (double)ptr3->dr_longitude / 3e6;
+    msg_fix_dr.altitude = 0.0;
+    msg_fix_dr.position_covariance_type = sensor_msgs::NavSatFix::COVARIANCE_TYPE_UNKNOWN;
+    msg_fix_dr.status.service = sensor_msgs::NavSatStatus::SERVICE_GPS;
+    pub_gps_fix_dr.publish(msg_fix_dr);
+
+#if 0
+    ROS_INFO("UTC Time: %04d-%02d-%02d %02d:%02d:%02d",
+             2000 + ptr2->utc_year, ptr2->utc_month, ptr2->utc_day,
+             ptr2->utc_hours, ptr2->utc_minutes, ptr2->utc_seconds);
+#endif
+  }
+#if 0
+  ROS_INFO("Time: %u.%u, %u.%u, %u.%u, delta: %fms",
+           msgs[0]->header.stamp.sec, msgs[0]->header.stamp.nsec,
+           msgs[1]->header.stamp.sec, msgs[1]->header.stamp.nsec,
+           msgs[2]->header.stamp.sec, msgs[2]->header.stamp.nsec,
+           std::max(std::max(
+               labs((msgs[1]->header.stamp - msgs[0]->header.stamp).toNSec()),
+               labs((msgs[2]->header.stamp - msgs[1]->header.stamp).toNSec())),
+               labs((msgs[0]->header.stamp - msgs[2]->header.stamp).toNSec())) / 1000000.0);
+#endif
+}
 void DbwNode::recvBrakeCmd(const dbw_fca_msgs::BrakeCmd::ConstPtr& msg)
 {
   can_msgs::Frame out;
