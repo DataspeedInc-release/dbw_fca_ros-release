@@ -2,6 +2,16 @@
 Changelog for package dbw_fca_can
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.10 (2020-07-09)
+-------------------
+* Add gear reject enumerations
+* Increase CMake minimum version to 3.0.2 to avoid warning about CMP0048
+  http://wiki.ros.org/noetic/Migration#Increase_required_CMake_version_to_avoid_author_warning
+* Remove unused parameter from launch file
+* Add sensor reports for wiper, highbeam, and hazard light
+* Add sensor reports for gyro, accelerometer, GPS, and tire pressure
+* Contributors: Kevin Hallenbeck, Sreedevi Adukkathayar, Sun Hwang
+
 1.0.9 (2020-02-14)
 ------------------
 * Update firmware versions

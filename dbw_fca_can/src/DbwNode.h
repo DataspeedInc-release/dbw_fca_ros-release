@@ -39,6 +39,7 @@
 
 // ROS messages
 #include <can_msgs/Frame.h>
+#include <dataspeed_can_msg_filters/ApproximateTime.h>
 #include <dbw_fca_msgs/BrakeCmd.h>
 #include <dbw_fca_msgs/BrakeReport.h>
 #include <dbw_fca_msgs/ThrottleCmd.h>
@@ -52,8 +53,12 @@
 #include <dbw_fca_msgs/WheelPositionReport.h>
 #include <dbw_fca_msgs/WheelSpeedReport.h>
 #include <dbw_fca_msgs/FuelLevelReport.h>
+#include <dbw_fca_msgs/TirePressureReport.h>
 #include <dbw_fca_msgs/BrakeInfoReport.h>
 #include <dbw_fca_msgs/ThrottleInfoReport.h>
+#include <sensor_msgs/Imu.h>
+#include <sensor_msgs/NavSatFix.h>
+#include <sensor_msgs/TimeReference.h>
 #include <sensor_msgs/JointState.h>
 #include <geometry_msgs/TwistStamped.h>
 #include <std_msgs/Empty.h>
@@ -82,6 +87,8 @@ private:
   void recvSteeringCmd(const dbw_fca_msgs::SteeringCmd::ConstPtr& msg);
   void recvGearCmd(const dbw_fca_msgs::GearCmd::ConstPtr& msg);
   void recvTurnSignalCmd(const dbw_fca_msgs::TurnSignalCmd::ConstPtr& msg);
+  void recvCanImu(const std::vector<can_msgs::Frame::ConstPtr> &msgs);
+  void recvCanGps(const std::vector<can_msgs::Frame::ConstPtr> &msgs);
 
   ros::Timer timer_;
   bool prev_enable_;
@@ -194,13 +201,22 @@ private:
   ros::Publisher pub_misc_1_;
   ros::Publisher pub_wheel_speeds_;
   ros::Publisher pub_wheel_positions_;
+  ros::Publisher pub_tire_pressure_;
   ros::Publisher pub_fuel_level_;
   ros::Publisher pub_brake_info_;
   ros::Publisher pub_throttle_info_;
+  ros::Publisher pub_imu_;
+  ros::Publisher pub_gps_fix_;
+  ros::Publisher pub_gps_time_;
+  ros::Publisher pub_gps_fix_dr;
   ros::Publisher pub_joint_states_;
   ros::Publisher pub_twist_;
   ros::Publisher pub_vin_;
   ros::Publisher pub_sys_enable_;
+
+  // Time Synchronization
+  dataspeed_can_msg_filters::ApproximateTime sync_imu_;
+  dataspeed_can_msg_filters::ApproximateTime sync_gps_;
 };
 
 } // namespace dbw_fca_can
