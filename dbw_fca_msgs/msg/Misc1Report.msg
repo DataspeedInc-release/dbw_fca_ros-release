@@ -3,6 +3,12 @@ Header header
 # Turn Signal enumeration
 TurnSignal turn_signal
 
+# Highbeam headlights / flash to pass enumeration
+HighBeam high_beam
+
+# Front Windshield Wipers enumeration
+Wiper wiper
+
 # Buttons
 bool btn_cc_on_off    # Cruise Control On/Off Toggle
 bool btn_cc_res       # Cruise Control Resume

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.0.2)
 project(dbw_fca_can)
 
 find_package(catkin REQUIRED COMPONENTS
@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   sensor_msgs
   can_msgs
+  dataspeed_can_msg_filters
   dbw_fca_msgs
 )
 
