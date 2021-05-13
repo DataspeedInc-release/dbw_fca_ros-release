@@ -48,8 +48,9 @@
 #include <dbw_fca_msgs/SteeringReport.h>
 #include <dbw_fca_msgs/GearCmd.h>
 #include <dbw_fca_msgs/GearReport.h>
-#include <dbw_fca_msgs/TurnSignalCmd.h>
+#include <dbw_fca_msgs/MiscCmd.h>
 #include <dbw_fca_msgs/Misc1Report.h>
+#include <dbw_fca_msgs/Misc2Report.h>
 #include <dbw_fca_msgs/WheelPositionReport.h>
 #include <dbw_fca_msgs/WheelSpeedReport.h>
 #include <dbw_fca_msgs/FuelLevelReport.h>
@@ -86,7 +87,8 @@ private:
   void recvThrottleCmd(const dbw_fca_msgs::ThrottleCmd::ConstPtr& msg);
   void recvSteeringCmd(const dbw_fca_msgs::SteeringCmd::ConstPtr& msg);
   void recvGearCmd(const dbw_fca_msgs::GearCmd::ConstPtr& msg);
-  void recvTurnSignalCmd(const dbw_fca_msgs::TurnSignalCmd::ConstPtr& msg);
+  void recvTurnSignalCmd(const dbw_fca_msgs::MiscCmd::ConstPtr& msg); // Backwards compatiblity
+  void recvMiscCmd(const dbw_fca_msgs::MiscCmd::ConstPtr& msg);
   void recvCanImu(const std::vector<can_msgs::Frame::ConstPtr> &msgs);
   void recvCanGps(const std::vector<can_msgs::Frame::ConstPtr> &msgs);
 
@@ -182,6 +184,9 @@ private:
   double steering_ratio_;
   double wheel_radius_;
 
+  // Joint states (enable/disable)
+  bool enable_joint_states_;
+
   // Subscribed topics
   ros::Subscriber sub_enable_;
   ros::Subscriber sub_disable_;
@@ -191,6 +196,7 @@ private:
   ros::Subscriber sub_steering_;
   ros::Subscriber sub_gear_;
   ros::Subscriber sub_turn_signal_;
+  ros::Subscriber sub_misc_;
 
   // Published topics
   ros::Publisher pub_can_;
@@ -199,6 +205,7 @@ private:
   ros::Publisher pub_steering_;
   ros::Publisher pub_gear_;
   ros::Publisher pub_misc_1_;
+  ros::Publisher pub_misc_2_;
   ros::Publisher pub_wheel_speeds_;
   ros::Publisher pub_wheel_positions_;
   ros::Publisher pub_tire_pressure_;
