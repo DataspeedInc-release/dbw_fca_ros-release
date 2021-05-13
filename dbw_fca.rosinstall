@@ -1,10 +1,10 @@
-- hg:
+- git:
     local-name: lusb
-    uri: https://bitbucket.org/DataspeedInc/lusb
+    uri: https://bitbucket.org/DataspeedInc/lusb.git
     version: master
-- hg:
+- git:
     local-name: dataspeed_can
-    uri: https://bitbucket.org/DataspeedInc/dataspeed_can
+    uri: https://bitbucket.org/DataspeedInc/dataspeed_can.git
     version: master
 - git:
     local-name: dbw_fca_ros
