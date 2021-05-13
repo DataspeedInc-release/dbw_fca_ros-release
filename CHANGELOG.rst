@@ -2,6 +2,27 @@
 Changelog for package dbw_fca_description
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.2.0 (2021-05-12)
+------------------
+
+1.1.3 (2021-03-09)
+------------------
+
+1.1.2 (2021-01-14)
+------------------
+
+1.1.1 (2020-08-17)
+------------------
+
+1.1.0 (2020-08-10)
+------------------
+
+1.0.11 (2020-08-05)
+-------------------
+* Change names of joints to be different from links
+  Gazebo 11 doesn't let joint names and link names be the same, which was allowed in earlier versions
+* Contributors: Micho Radovnikovich
+
 1.0.10 (2020-07-09)
 -------------------
 * Increase CMake minimum version to 3.0.2 to avoid warning about CMP0048
