@@ -12,6 +12,8 @@ add_message_files(DIRECTORY msg FILES
   BrakeInfoReport.msg
   BrakeReport.msg
   DoorCmd.msg
+  FrontFanSpeed.msg
+  FrontTemp.msg
   FuelLevelReport.msg
   Gear.msg
   GearCmd.msg
@@ -19,7 +21,11 @@ add_message_files(DIRECTORY msg FILES
   GearReject.msg
   GearReport.msg
   HighBeam.msg
+  HvacButtonCmd.msg
+  HvacSeat.msg
+  MiscCmd.msg
   Misc1Report.msg
+  Misc2Report.msg
   SteeringCmd.msg
   SteeringReport.msg
   ThrottleCmd.msg
@@ -27,7 +33,7 @@ add_message_files(DIRECTORY msg FILES
   ThrottleReport.msg
   TirePressureReport.msg
   TurnSignal.msg
-  TurnSignalCmd.msg
+  VentMode.msg
   WatchdogCounter.msg
   WheelPositionReport.msg
   WheelSpeedReport.msg
@@ -43,8 +49,12 @@ catkin_package(CATKIN_DEPENDS
   message_runtime
   std_msgs
   geometry_msgs
+  INCLUDE_DIRS include
 )
 
+install(DIRECTORY include/${PROJECT_NAME}/
+        DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+)
 install(DIRECTORY bmr
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
         FILES_MATCHING PATTERN "*.bmr"
