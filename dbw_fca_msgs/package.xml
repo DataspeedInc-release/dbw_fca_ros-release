@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>dbw_fca_msgs</name>
-  <version>1.0.10</version>
+  <version>1.2.0</version>
   <description>
     Drive-by-wire messages for the Chrysler Pacifica
   </description>
@@ -28,7 +28,8 @@
     <rosbag_migration_rule rule_file="bmr/1.0.3-1.0.4/ThrottleInfoReport.bmr"/>
     <rosbag_migration_rule rule_file="bmr/1.0.8-1.0.9/Misc1Report.bmr"/>
     <rosbag_migration_rule rule_file="bmr/1.0.8-1.0.9/TurnSignalCmd.bmr"/>
-    <rosbag_migration_rule rule_file="bmr/1.0.9-1.0.10/Misc1Report.bmr"/>    
+    <rosbag_migration_rule rule_file="bmr/1.0.9-1.0.10/Misc1Report.bmr"/>
+    <rosbag_migration_rule rule_file="bmr/1.1.1-1.1.2/MiscCmd.bmr"/>
   </export>
 
 </package>

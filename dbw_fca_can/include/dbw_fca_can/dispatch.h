@@ -58,8 +58,8 @@ typedef struct {
   uint16_t PI;
   uint16_t PC;
   uint16_t PO;
-  uint8_t BTYPE :1;
-  uint8_t :2;
+  uint8_t BTYPE :2;
+  uint8_t :1;
   uint8_t WDCBRK :1;
   uint8_t WDCSRC :4;
   uint8_t ENABLED :1;
@@ -110,7 +110,8 @@ typedef struct {
   uint8_t IGNORE :1;
   uint8_t :1;
   uint8_t QUIET :1;
-  uint8_t :2;
+  uint8_t RES1 :1;
+  uint8_t :1;
   uint8_t CMD_TYPE :1;
   uint8_t SVEL;
   uint8_t :8;
@@ -137,7 +138,8 @@ typedef struct {
 
 typedef struct {
   uint8_t GCMD :3;
-  uint8_t :4;
+  uint8_t :3;
+  uint8_t RES1 :1;
   uint8_t CLEAR :1;
 } MsgGearCmd;
 
@@ -155,7 +157,28 @@ typedef struct {
   uint8_t :2;
   uint8_t DOORSEL :2;
   uint8_t DOORCMD :2;
-} MsgTurnSignalCmd;
+  uint8_t ft_drv_temp_cmd :7;
+  uint8_t :1;
+  uint8_t ft_psg_temp_cmd :7;
+  uint8_t :1;
+  uint8_t ft_fn_sp_cmd :3;
+  uint8_t :5;
+  uint8_t max_ac :2;
+  uint8_t ac :2;
+  uint8_t ft_hvac :2;
+  uint8_t auto_md :2;
+  uint8_t recirc :2;
+  uint8_t sync :2;
+  uint8_t r_defr :2;
+  uint8_t f_defr :2;
+  uint8_t vent_md_cmd :4;
+  uint8_t :2;
+  uint8_t hsw_cmd :2;
+  uint8_t fl_hs_cmd :2;
+  uint8_t fl_vs_cmd :2;
+  uint8_t fr_hs_cmd :2;
+  uint8_t fr_vs_cmd :2;
+} MsgMiscCmd;
 
 typedef struct {
   uint8_t turn_signal :2;
@@ -193,6 +216,30 @@ typedef struct {
   uint8_t btn_cc_mode :1;
   uint8_t :7;
 } MsgMiscReport;
+
+typedef struct {
+  uint8_t ft_drv_temp_stat :7;
+  uint8_t :1;
+  uint8_t ft_psg_temp_stat :7;
+  uint8_t :1;
+  uint8_t ft_fn_sp_stat :3;
+  uint8_t :5;
+  uint8_t max_ac :1;
+  uint8_t ac :1;
+  uint8_t ft_hvac :1;
+  uint8_t auto_md :1;
+  uint8_t recirc :1;
+  uint8_t sync :1;
+  uint8_t r_defr :1;
+  uint8_t f_defr :1;
+  uint8_t vent_md_stat: 4;
+  uint8_t :3;
+  uint8_t hsw_stat :1;
+  uint8_t fl_hs_stat :2;
+  uint8_t fl_vs_stat :2;
+  uint8_t fr_hs_stat :2;
+  uint8_t fr_vs_stat :2;
+} MsgMisc2Report;
 
 typedef struct {
   int16_t front_left;
@@ -293,7 +340,14 @@ typedef struct {
 } MsgReportThrottleInfo;
 
 typedef enum {
-  LIC_MUX_F0     = 0x00, // Feature 0 (Main)
+  LIC_MUX_F0     = 0x00, // Feature 0 (BASE)
+  LIC_MUX_F1     = 0x01, // Feature 1 (CONTROL)
+  LIC_MUX_F2     = 0x02, // Feature 2 (SENSORS)
+  LIC_MUX_F3     = 0x03, // Feature 3 (unused)
+  LIC_MUX_F4     = 0x04, // Feature 4 (unused)
+  LIC_MUX_F5     = 0x05, // Feature 5 (unused)
+  LIC_MUX_F6     = 0x06, // Feature 6 (unused)
+  LIC_MUX_F7     = 0x07, // Feature 7 (unused)
   LIC_MUX_LDATE0 = 0x41,
   LIC_MUX_LDATE1 = 0x42,
   LIC_MUX_MAC    = 0x80,
@@ -404,8 +458,9 @@ static void dispatchAssertSizes() {
   BUILD_ASSERT(8 == sizeof(MsgSteeringReport));
   BUILD_ASSERT(1 == sizeof(MsgGearCmd));
   BUILD_ASSERT(2 == sizeof(MsgGearReport));
-  BUILD_ASSERT(1 == sizeof(MsgTurnSignalCmd));
+  BUILD_ASSERT(8 == sizeof(MsgMiscCmd));
   BUILD_ASSERT(6 == sizeof(MsgMiscReport));
+  BUILD_ASSERT(6 == sizeof(MsgMisc2Report)); 
   BUILD_ASSERT(8 == sizeof(MsgReportWheelSpeed));
   BUILD_ASSERT(6 == sizeof(MsgReportAccel));
   BUILD_ASSERT(4 == sizeof(MsgReportGyro));
@@ -444,6 +499,7 @@ enum {
   ID_REPORT_FUEL_LEVEL      = 0x072,
   ID_REPORT_BRAKE_INFO      = 0x074,
   ID_REPORT_THROTTLE_INFO   = 0x075,
+  ID_MISC2_REPORT           = 0x07A,
   ID_LICENSE                = 0x07E,
   ID_VERSION                = 0x07F,
 };
