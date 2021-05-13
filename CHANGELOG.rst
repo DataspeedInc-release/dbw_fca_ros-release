@@ -2,6 +2,28 @@
 Changelog for package dbw_fca_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.2.0 (2021-05-12)
+------------------
+
+1.1.3 (2021-03-09)
+------------------
+
+1.1.2 (2021-01-14)
+------------------
+* Fix typo in MiscCmd message
+* Contributors: Kevin Hallenbeck
+
+1.1.1 (2020-08-17)
+------------------
+
+1.1.0 (2020-08-10)
+------------------
+* Add HVAC control and status
+* Contributors: Kevin Hallenbeck, Sun Hwang
+
+1.0.11 (2020-08-05)
+-------------------
+
 1.0.10 (2020-07-09)
 -------------------
 * Add gear reject enumerations
