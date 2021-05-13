@@ -1,0 +1,181 @@
+ros-melodic-dbw-fca-can (1.2.0-1bionic) bionic; urgency=high
+
+  * Bump firmware versions
+  * C++17 and std::clamp()
+  * Remove ROS Kinetic support
+  * Populate brake/throttle/steering command values even if enable is false
+  * Fix socketcan error frame lock up
+  * Contributors: Kevin Hallenbeck, Robert Maupin
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Wed, 12 May 2021 04:00:00 -0000
+
+ros-melodic-dbw-fca-can (1.1.3-1bionic) bionic; urgency=high
+
+  * Bump firmware versions
+  * License multiple features individually
+  * Add option to use socketcan hardware
+  * Contributors: Kevin Hallenbeck
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Tue, 09 Mar 2021 05:00:00 -0000
+
+ros-melodic-dbw-fca-can (1.1.2-1bionic) bionic; urgency=high
+
+  * Bump firmware versions
+  * Fix typo in MiscCmd message
+  * Update brake type field to match firmware change
+  * Add Ford Ranger platform
+  * Add reserved bit to prevent warnings
+  * Contributors: Kevin Hallenbeck
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Thu, 14 Jan 2021 05:00:00 -0000
+
+ros-melodic-dbw-fca-can (1.1.1-1bionic) bionic; urgency=high
+
+  * Bump firmware versions
+  * Contributors: Kevin Hallenbeck
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Mon, 17 Aug 2020 04:00:00 -0000
+
+ros-melodic-dbw-fca-can (1.1.0-1bionic) bionic; urgency=high
+
+  * Add HVAC control and status
+  * Contributors: Kevin Hallenbeck, Sun Hwang
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Mon, 10 Aug 2020 04:00:00 -0000
+
+ros-melodic-dbw-fca-can (1.0.11-1bionic) bionic; urgency=high
+
+  * Only publish joint states from DbwNode if set to load URDF model
+    The joint states messages from DbwNode collide with the joint states published by the Gazebo simulator otherwise.
+  * Change names of joints to be different from links
+    Gazebo 11 doesn't let joint names and link names be the same, which was allowed in earlier versions
+  * Contributors: Kevin Hallenbeck, Micho Radovnikovich
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Wed, 05 Aug 2020 04:00:00 -0000
+
+ros-melodic-dbw-fca-can (1.0.10-1bionic) bionic; urgency=high
+
+  * Add gear reject enumerations
+  * Increase CMake minimum version to 3.0.2 to avoid warning about CMP0048
+    http://wiki.ros.org/noetic/Migration#Increase_required_CMake_version_to_avoid_author_warning
+  * Remove unused parameter from launch file
+  * Add sensor reports for wiper, highbeam, and hazard light
+  * Add sensor reports for gyro, accelerometer, GPS, and tire pressure
+  * Contributors: Kevin Hallenbeck, Sreedevi Adukkathayar, Sun Hwang
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Thu, 09 Jul 2020 04:00:00 -0000
+
+ros-melodic-dbw-fca-can (1.0.9-1bionic) bionic; urgency=high
+
+  * Update firmware versions
+  * Report NAN for signals that are unavailable/faulted
+  * Add door commands
+  * Contributors: Kevin Hallenbeck
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Fri, 14 Feb 2020 05:00:00 -0000
+
+ros-melodic-dbw-fca-can (1.0.8-1bionic) bionic; urgency=high
+
+  * Add launch file argument to switch between Jeep and Pacifica URDF models
+  * Contributors: Micho Radovnikovich
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Thu, 17 Oct 2019 04:00:00 -0000
+
+ros-melodic-dbw-fca-can (1.0.7-1bionic) bionic; urgency=high
+
+  * Added argument to enable/disable CAN message filtering on DBW message range
+  * Contributors: Kevin Hallenbeck
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Fri, 13 Sep 2019 04:00:00 -0000
+
+ros-melodic-dbw-fca-can (1.0.6-1bionic) bionic; urgency=high
+
+  * Updated firmware versions
+  * Updated website maintenance link
+  * Contributors: Kevin Hallenbeck
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Tue, 13 Aug 2019 04:00:00 -0000
+
+ros-melodic-dbw-fca-can (1.0.5-1bionic) bionic; urgency=high
+
+  * Extend licensing to each module
+  * Contributors: Kevin Hallenbeck, Sun Hwang
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Wed, 24 Jul 2019 04:00:00 -0000
+
+ros-melodic-dbw-fca-can (1.0.4-1bionic) bionic; urgency=high
+
+  * Added support for non-hybrid brake report values
+  * Added gear number to ThrottleInfoReport
+  * Contributors: Kevin Hallenbeck, Sun Hwang
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Thu, 11 Jul 2019 04:00:00 -0000
+
+ros-melodic-dbw-fca-can (1.0.3-1bionic) bionic; urgency=high
+
+  * Added warnings for unknown and unsupported command types
+  * Added FORD_C1 platform
+  * Added fuel level report message
+  * Added casts to force single precision floating point math
+  * Contributors: Kevin Hallenbeck
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Fri, 03 May 2019 04:00:00 -0000
+
+ros-melodic-dbw-fca-can (1.0.2-1bionic) bionic; urgency=high
+
+
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Thu, 14 Mar 2019 04:00:00 -0000
+
+ros-melodic-dbw-fca-can (1.0.1-1bionic) bionic; urgency=high
+
+  * Updated firmware versions
+  * Added support for firmware change that uses SVEL resolution of 4 deg/s
+  * Refactored tcpNoDelay() for subscribers
+  * Added missing tests for PlatformVersion.h
+  * Contributors: Kevin Hallenbeck, Micho Radovnikovich
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Fri, 01 Mar 2019 05:00:00 -0000
+
+ros-melodic-dbw-fca-can (1.0.0-1bionic) bionic; urgency=high
+
+  * Updated firmware versions
+  * Added BTYPE (brake type) bit
+  * Added CMD_DECEL brake command type (only for non-hybrid platforms)
+  * Added dataspeed_ulc_can to dbw.launch
+  * Added throttlePercentFromPedal lookup table function and corresponding test
+  * Use the ${catkin_EXPORTED_TARGETS} macro for target dependencies
+  * Contributors: Kevin Hallenbeck, Micho Radovnikovich
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Fri, 30 Nov 2018 05:00:00 -0000
+
+ros-melodic-dbw-fca-can (0.0.2-1bionic) bionic; urgency=high
+
+  * Updated firmware versions
+  * Added platform FCA_WK2 (Jeep Grand Cherokee)
+  * Force forwarding of brake command type when ABS module is present (instead of BPEC module)
+  * Disengage on any fault for brake/throttle/steering (change AND to OR)
+  * Added cruise control buttons
+  * Latch firmware version on any change (previously only latched once)
+  * Changed pedal_luts default from true to false (forward command type by default now)
+  * Disregard overrides on unused subsystems using the TIMEOUT bit
+  * Removed cruise control related buttons that are not implemented by firmware at this time
+  * Fixed typo in nodelets.xml of dbw_fca_can
+  * Renamed steering CMD_TYPE and TMODE
+  * Set CXX_STANDARD to C++11 only when necessary
+  * Use sign of wheel speeds to set sign of vehicle speed
+  * Removed unused dependencies and includes
+  * Removed steering debug message
+  * Handle version message with a map/database of several platform/module combinations (ported from dbw_mkz_can)
+  * Contributors: Kevin Hallenbeck, Micho Radovnikovich
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Tue, 23 Oct 2018 04:00:00 -0000
+
+ros-melodic-dbw-fca-can (0.0.1-1bionic) bionic; urgency=high
+
+  * Initial release
+  * Contributors: Kevin Hallenbeck
+
+ -- Kevin Hallenbeck <khallenbeck@dataspeedinc.com>  Wed, 08 Aug 2018 04:00:00 -0000
+
+
