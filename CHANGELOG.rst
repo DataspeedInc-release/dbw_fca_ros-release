@@ -2,6 +2,11 @@
 Changelog for package dbw_fca_description
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.2.1 (2021-09-20)
+------------------
+* Modify rear wheel link inertial parameters to prevent wobbling in Gazebo
+* Contributors: Micho Radovnikovich
+
 1.2.0 (2021-05-12)
 ------------------
 
