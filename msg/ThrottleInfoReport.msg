@@ -8,3 +8,6 @@ float32 axle_torque   # Driver Intended Axle Torque (Nm)
 
 # Gear Num
 GearNum gear_num      # Gear Number
+
+# Ignition status
+Ignition ignition     # Ignition status (enum)
