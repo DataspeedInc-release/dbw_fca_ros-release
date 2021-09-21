@@ -60,14 +60,14 @@ namespace dbw_fca_can
 
 // Latest firmware versions
 PlatformMap FIRMWARE_LATEST({
-  {PlatformVersion(P_FCA_RU,  M_BPEC,  ModuleVersion(1,4,3))},
-  {PlatformVersion(P_FCA_RU,  M_TPEC,  ModuleVersion(1,4,3))},
-  {PlatformVersion(P_FCA_RU,  M_STEER, ModuleVersion(1,4,3))},
-  {PlatformVersion(P_FCA_RU,  M_SHIFT, ModuleVersion(1,4,3))},
-  {PlatformVersion(P_FCA_WK2, M_TPEC,  ModuleVersion(1,2,3))},
-  {PlatformVersion(P_FCA_WK2, M_STEER, ModuleVersion(1,2,3))},
-  {PlatformVersion(P_FCA_WK2, M_SHIFT, ModuleVersion(1,2,3))},
-  {PlatformVersion(P_FCA_WK2, M_ABS,   ModuleVersion(1,2,3))},
+  {PlatformVersion(P_FCA_RU,  M_BPEC,  ModuleVersion(1,5,0))},
+  {PlatformVersion(P_FCA_RU,  M_TPEC,  ModuleVersion(1,5,0))},
+  {PlatformVersion(P_FCA_RU,  M_STEER, ModuleVersion(1,5,0))},
+  {PlatformVersion(P_FCA_RU,  M_SHIFT, ModuleVersion(1,5,0))},
+  {PlatformVersion(P_FCA_WK2, M_TPEC,  ModuleVersion(1,3,0))},
+  {PlatformVersion(P_FCA_WK2, M_STEER, ModuleVersion(1,3,0))},
+  {PlatformVersion(P_FCA_WK2, M_SHIFT, ModuleVersion(1,3,0))},
+  {PlatformVersion(P_FCA_WK2, M_ABS,   ModuleVersion(1,3,0))},
 });
 
 // Minimum firmware versions required for using the new SVEL resolution of 4 deg/s
@@ -579,6 +579,7 @@ void DbwNode::recvCAN(const can_msgs::Frame::ConstPtr& msg)
             out.axle_torque = (float)ptr->axle_torque * 1.5625f;
           }
           out.gear_num.num = ptr->gear_num;
+          out.ignition.value = ptr->ign_stat;
           pub_throttle_info_.publish(out);
         }
         break;
@@ -674,15 +675,19 @@ void DbwNode::recvCAN(const can_msgs::Frame::ConstPtr& msg)
             }
           } else if ((LIC_MUX_F0 <= ptr->mux) && (ptr->mux <= LIC_MUX_F7)) {
             constexpr std::array<const char*, 8> NAME = {"BASE","CONTROL","SENSORS","","","","",""};
+            constexpr std::array<bool, 8> WARN = {true, true, true, false, true, true, true, true};
             const size_t i = ptr->mux - LIC_MUX_F0;
             const int id = module * NAME.size() + i;
+            const std::string name = strcmp(NAME[i], "") ? NAME[i] : std::string(1, '0' + i);
             if (ptr->license.enabled) {
-              ROS_INFO_ONCE_ID(id, "Licensing: %s feature '%s' enabled%s", str_m, NAME[i], ptr->license.trial ? " as a counted trial" : "");
+              ROS_INFO_ONCE_ID(id, "Licensing: %s feature '%s' enabled%s", str_m, name.c_str(), ptr->license.trial ? " as a counted trial" : "");
+            } else if (ptr->ready && !WARN[i]) {
+              ROS_INFO_ONCE_ID(id, "Licensing: %s feature '%s' not licensed.", str_m, name.c_str());
             } else if (ptr->ready) {
-              ROS_WARN_ONCE_ID(id, "Licensing: %s feature '%s' not licensed. Visit https://www.dataspeedinc.com/products/maintenance-subscription/ to request a license.", str_m, NAME[i]);
+              ROS_WARN_ONCE_ID(id, "Licensing: %s feature '%s' not licensed. Visit https://www.dataspeedinc.com/products/maintenance-subscription/ to request a license.", str_m, name.c_str());
             }
-            if (ptr->ready && (module == M_STEER) && (ptr->license.trial || !ptr->license.enabled)) {
-              ROS_INFO_ONCE("Licensing: Feature '%s' trials used: %u, remaining: %u", NAME[i],
+            if (ptr->ready && (module == M_STEER) && (ptr->license.trial || (!ptr->license.enabled && WARN[i]))) {
+              ROS_INFO_ONCE("Licensing: Feature '%s' trials used: %u, remaining: %u", name.c_str(),
                             ptr->license.trials_used, ptr->license.trials_left);
             }
           }
@@ -714,19 +719,19 @@ void DbwNode::recvCAN(const can_msgs::Frame::ConstPtr& msg)
         break;
 
       case ID_BRAKE_CMD:
-        ROS_WARN_COND(warn_cmds_ && !((const MsgBrakeCmd*)msg->data.elems)->RES1,
+        ROS_WARN_COND(warn_cmds_ && !((const MsgBrakeCmd*)msg->data.elems)->RES1 && !((const MsgBrakeCmd*)msg->data.elems)->RES2,
                                   "DBW system: Another node on the CAN bus is commanding the vehicle!!! Subsystem: Brake. Id: 0x%03X", ID_BRAKE_CMD);
         break;
       case ID_THROTTLE_CMD:
-        ROS_WARN_COND(warn_cmds_ && !((const MsgThrottleCmd*)msg->data.elems)->RES1,
+        ROS_WARN_COND(warn_cmds_ && !((const MsgThrottleCmd*)msg->data.elems)->RES1 && !((const MsgThrottleCmd*)msg->data.elems)->RES2,
                                   "DBW system: Another node on the CAN bus is commanding the vehicle!!! Subsystem: Throttle. Id: 0x%03X", ID_THROTTLE_CMD);
         break;
       case ID_STEERING_CMD:
-        ROS_WARN_COND(warn_cmds_ && !((const MsgSteeringCmd*)msg->data.elems)->RES1,
+        ROS_WARN_COND(warn_cmds_ && !((const MsgSteeringCmd*)msg->data.elems)->RES1 && !((const MsgSteeringCmd*)msg->data.elems)->RES2,
                                   "DBW system: Another node on the CAN bus is commanding the vehicle!!! Subsystem: Steering. Id: 0x%03X", ID_STEERING_CMD);
         break;
       case ID_GEAR_CMD:
-        ROS_WARN_COND(warn_cmds_ && !((const MsgGearCmd*)msg->data.elems)->RES1,
+        ROS_WARN_COND(warn_cmds_ && !((const MsgGearCmd*)msg->data.elems)->RES1 && !((const MsgGearCmd*)msg->data.elems)->RES2,
                                   "DBW system: Another node on the CAN bus is commanding the vehicle!!! Subsystem: Shifting. Id: 0x%03X", ID_GEAR_CMD);
         break;
       case ID_MISC_CMD:
@@ -999,6 +1004,9 @@ void DbwNode::recvSteeringCmd(const dbw_fca_msgs::SteeringCmd::ConstPtr& msg)
   }
   if (msg->quiet) {
     ptr->QUIET = 1;
+  }
+  if (msg->alert) {
+    ptr->ALERT = 1;
   }
   ptr->COUNT = msg->count;
   pub_can_.publish(out);
