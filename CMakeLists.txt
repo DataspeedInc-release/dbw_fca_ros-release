@@ -23,6 +23,7 @@ add_message_files(DIRECTORY msg FILES
   HighBeam.msg
   HvacButtonCmd.msg
   HvacSeat.msg
+  Ignition.msg
   MiscCmd.msg
   Misc1Report.msg
   Misc2Report.msg
