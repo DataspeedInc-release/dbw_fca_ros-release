@@ -2,6 +2,24 @@
 Changelog for package dbw_fca_can
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.0 (2022-11-30)
+------------------
+* Bump firmware versions
+* Change unsigned vehicle speed to signed vehicle velocity
+* Contributors: Kevin Hallenbeck
+
+1.2.3 (2022-05-13)
+------------------
+* Periodically publish DBW enabled status in addition to latched and on change
+* Bump firmware versions
+* Contributors: Kevin Hallenbeck
+
+1.2.2 (2022-03-08)
+------------------
+* Bump firmware versions
+* Minor cleanup
+* Contributors: Kevin Hallenbeck
+
 1.2.1 (2021-09-20)
 ------------------
 * Bump firmware versions
