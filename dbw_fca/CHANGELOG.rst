@@ -2,6 +2,17 @@
 Changelog for package dbw_fca
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.0 (2022-11-30)
+------------------
+* Fix ROS install key after they changed it
+* Contributors: Kevin Hallenbeck
+
+1.2.3 (2022-05-13)
+------------------
+
+1.2.2 (2022-03-08)
+------------------
+
 1.2.1 (2021-09-20)
 ------------------
 
