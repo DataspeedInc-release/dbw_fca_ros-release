@@ -60,14 +60,14 @@ namespace dbw_fca_can
 
 // Latest firmware versions
 PlatformMap FIRMWARE_LATEST({
-  {PlatformVersion(P_FCA_RU,  M_BPEC,  ModuleVersion(1,5,0))},
-  {PlatformVersion(P_FCA_RU,  M_TPEC,  ModuleVersion(1,5,0))},
-  {PlatformVersion(P_FCA_RU,  M_STEER, ModuleVersion(1,5,0))},
-  {PlatformVersion(P_FCA_RU,  M_SHIFT, ModuleVersion(1,5,0))},
-  {PlatformVersion(P_FCA_WK2, M_TPEC,  ModuleVersion(1,3,0))},
-  {PlatformVersion(P_FCA_WK2, M_STEER, ModuleVersion(1,3,0))},
-  {PlatformVersion(P_FCA_WK2, M_SHIFT, ModuleVersion(1,3,0))},
-  {PlatformVersion(P_FCA_WK2, M_ABS,   ModuleVersion(1,3,0))},
+  {PlatformVersion(P_FCA_RU,  M_BPEC,  ModuleVersion(1,6,0))},
+  {PlatformVersion(P_FCA_RU,  M_TPEC,  ModuleVersion(1,6,0))},
+  {PlatformVersion(P_FCA_RU,  M_STEER, ModuleVersion(1,6,0))},
+  {PlatformVersion(P_FCA_RU,  M_SHIFT, ModuleVersion(1,6,0))},
+  {PlatformVersion(P_FCA_WK2, M_TPEC,  ModuleVersion(1,4,0))},
+  {PlatformVersion(P_FCA_WK2, M_STEER, ModuleVersion(1,4,0))},
+  {PlatformVersion(P_FCA_WK2, M_SHIFT, ModuleVersion(1,4,0))},
+  {PlatformVersion(P_FCA_WK2, M_ABS,   ModuleVersion(1,4,0))},
 });
 
 // Minimum firmware versions required for using the new SVEL resolution of 4 deg/s
@@ -181,7 +181,7 @@ DbwNode::DbwNode(ros::NodeHandle &node, ros::NodeHandle &priv_nh)
   sub_throttle_ = node.subscribe("throttle_cmd", 1, &DbwNode::recvThrottleCmd, this, NODELAY);
   sub_steering_ = node.subscribe("steering_cmd", 1, &DbwNode::recvSteeringCmd, this, NODELAY);
   sub_gear_ = node.subscribe("gear_cmd", 1, &DbwNode::recvGearCmd, this, NODELAY);
-  sub_turn_signal_ = node.subscribe("turn_signal_cmd", 1, &DbwNode::recvTurnSignalCmd, this, NODELAY); // Backwards compatiblity
+  sub_turn_signal_ = node.subscribe("turn_signal_cmd", 1, &DbwNode::recvMiscCmd, this, NODELAY); // Backwards compatiblity
   sub_misc_ = node.subscribe("misc_cmd", 1, &DbwNode::recvMiscCmd, this, NODELAY);
 
   // Setup Timer
@@ -312,10 +312,10 @@ void DbwNode::recvCAN(const can_msgs::Frame::ConstPtr& msg)
           } else {
             out.steering_wheel_torque = (float)ptr->TORQUE * (float)0.0625;
           }
-          if (ptr->SPEED == 0xFFFF) {
+          if ((uint16_t)ptr->VEH_VEL == 0x8000) {
             out.speed = NAN;
           } else {
-            out.speed = (float)ptr->SPEED * (float)(0.01 / 3.6) * (float)speedSign();
+            out.speed = (float)ptr->VEH_VEL * (float)(0.01 / 3.6);
           }
           out.enabled = ptr->ENABLED ? true : false;
           out.override = ptr->OVERRIDE ? true : false;
@@ -1029,11 +1029,6 @@ void DbwNode::recvGearCmd(const dbw_fca_msgs::GearCmd::ConstPtr& msg)
   pub_can_.publish(out);
 }
 
-void DbwNode::recvTurnSignalCmd(const dbw_fca_msgs::MiscCmd::ConstPtr& msg)
-{
-  recvMiscCmd(msg);
-}
-
 void DbwNode::recvMiscCmd(const dbw_fca_msgs::MiscCmd::ConstPtr& msg)
 {
   can_msgs::Frame out;
@@ -1068,15 +1063,14 @@ void DbwNode::recvMiscCmd(const dbw_fca_msgs::MiscCmd::ConstPtr& msg)
   pub_can_.publish(out);
 }
 
-bool DbwNode::publishDbwEnabled()
+bool DbwNode::publishDbwEnabled(bool force)
 {
-  bool change = false;
   bool en = enabled();
-  if (prev_enable_ != en) {
+  bool change = prev_enable_ != en;
+  if (change || force) {
     std_msgs::Bool msg;
     msg.data = en;
     pub_sys_enable_.publish(msg);
-    change = true;
   }
   prev_enable_ = en;
   return change;
@@ -1084,6 +1078,12 @@ bool DbwNode::publishDbwEnabled()
 
 void DbwNode::timerCallback(const ros::TimerEvent& event)
 {
+  // Publish status periodically, in addition to latched and on change
+  if (publishDbwEnabled(true)) {
+    ROS_WARN("DBW system enable status changed unexpectedly");
+  }
+
+  // Clear override statuses if necessary
   if (clear()) {
     can_msgs::Frame out;
     out.is_extended = false;
