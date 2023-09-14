@@ -2,6 +2,19 @@
 Changelog for package dbw_fca_can
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.2 (2023-09-11)
+------------------
+* Bump firmware versions
+* Add ready flag to GearReport message
+* Contributors: Kevin Hallenbeck
+
+1.3.1 (2023-05-10)
+------------------
+* Bump firmware versions
+* Specify Python3 for scripts (no more ROS Melodic with Python2)
+* Add P702 platform (2021+ F-150)
+* Contributors: Kevin Hallenbeck
+
 1.3.0 (2022-11-30)
 ------------------
 * Bump firmware versions
