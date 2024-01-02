@@ -2,6 +2,11 @@
 Changelog for package dbw_fca
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.3 (2024-01-02)
+------------------
+* Fix install script for end-of-life ROS distros
+* Contributors: Kevin Hallenbeck
+
 1.3.2 (2023-09-11)
 ------------------
 

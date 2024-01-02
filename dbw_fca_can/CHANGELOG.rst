@@ -2,6 +2,11 @@
 Changelog for package dbw_fca_can
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.3 (2024-01-02)
+------------------
+* Warn when the unsupported DBW2 system is detected at runtime and suggest the correct package
+* Contributors: Kevin Hallenbeck
+
 1.3.2 (2023-09-11)
 ------------------
 * Bump firmware versions
