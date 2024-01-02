@@ -1,3 +1,31 @@
+## dbw_fca_ros (noetic) - 1.3.3-1
+
+The packages in the `dbw_fca_ros` repository were released into the `noetic` distro by running `/usr/bin/bloom-release dbw_fca_ros --rosdistro noetic` on `Tue, 02 Jan 2024 17:47:47 -0000`
+
+These packages were released:
+- `dbw_fca`
+- `dbw_fca_can`
+- `dbw_fca_description`
+- `dbw_fca_joystick_demo`
+- `dbw_fca_msgs`
+
+Version of package(s) in repository `dbw_fca_ros`:
+
+- upstream repository: https://bitbucket.org/DataspeedInc/dbw_fca_ros.git
+- release repository: https://github.com/DataspeedInc-release/dbw_fca_ros-release.git
+- rosdistro version: `1.3.2-1`
+- old version: `1.3.2-1`
+- new version: `1.3.3-1`
+
+Versions of tools used:
+
+- bloom version: `0.11.2`
+- catkin_pkg version: `1.0.0`
+- rosdep version: `0.22.2`
+- rosdistro version: `0.9.0`
+- vcstools version: `0.1.42`
+
+
 ## dbw_fca_ros (noetic) - 1.3.2-1
 
 The packages in the `dbw_fca_ros` repository were released into the `noetic` distro by running `/usr/bin/bloom-release dbw_fca_ros --rosdistro noetic` on `Thu, 14 Sep 2023 20:01:28 -0000`
